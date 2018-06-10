@@ -83,10 +83,19 @@
     "flow-watch": "^1.1.0",
     "husky": "^0.14.3",
     "istanbul": "^0.4.5",
+    "jscodeshift": "^0.5.1",
     "mocha": "^4.1.0",
     "nyc": "^11.4.1",
     "rimraf": "^2.6.0",
     "semantic-release": "^15.1.4",
     "travis-deploy-once": "^4.3.1"
+  },
+  "dependencies": {
+    "babel-types": "^6.26.0",
+    "babylon": "^6.18.0",
+    "inflection": "^1.12.0",
+    "lodash.map": "^4.6.0",
+    "lodash.upperfirst": "^4.3.1",
+    "recast": "^0.15.0"
   }
 }
