@@ -85,6 +85,19 @@ module.exports = function () {
       }
     },
     {
+      name: 'convertLambdaToFunction',
+      description: "Convert lambda to a function",
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        const lambdas = root.find(j.ArrowFunctionExpression).filter(
+          pathInRange(text, selection)
+        )
+        require('./convertLambdaToFunction')(lambdas)
+        return {text: root.toSource()}
+      }
+    },
+    {
       name: 'convertFSCToComponent',
       description: "Convert React Stateless Function Component to a Component class",
       onSelected: ({text, selection}) => {
