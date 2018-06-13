@@ -42,17 +42,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jcoreio/sequelize-codemods.git"
+    "url": "https://github.com/jedwards1211/codemods.git"
   },
   "keywords": [
-    "es2015"
+    "jscodeshift",
+    "codemod",
+    "refactoring",
+    "react",
+    "sequelize"
   ],
   "author": "Andy Edwards",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jcoreio/sequelize-codemods/issues"
+    "url": "https://github.com/jedwards1211/codemods/issues"
   },
-  "homepage": "https://github.com/jcoreio/sequelize-codemods#readme",
+  "homepage": "https://github.com/jedwards1211/codemods#readme",
   "devDependencies": {
     "@commitlint/cli": "^6.0.2",
     "@commitlint/config-conventional": "^6.0.2",
