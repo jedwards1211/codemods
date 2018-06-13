@@ -30,6 +30,40 @@ const baz = () => (
 
     convertFSCToComponent(root)
 
-    console.log(root.toSource())
+    expect(root.toSource()).to.equal(`
+class Foo<T> extends React.Component<Props<T>> {
+  render(): React.Node {
+    const {className}: Props<T> = this.props;
+    const blah = () => 2
+    return <div className={className} />
+  }
+}
+
+class Bar<T> extends React.Component<Props<T>> {
+  render(): React.Node {
+    const {className}: Props<T> = this.props;
+    return <div className={className} />
+  }
+}
+
+const foo = () => 2,
+      bar = () => 3
+
+class baz extends React.Component {
+  render() {
+    return (
+      <button>
+        baz
+      </button>
+    );
+  }
+}
+
+class extends React.Component {
+  render() {
+    return <div />;
+  }
+};
+`)
   })
 })

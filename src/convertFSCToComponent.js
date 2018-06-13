@@ -82,7 +82,7 @@ function convertFSCToComponent(collection) {
 
   collection.find(j.ArrowFunctionExpression).replaceWith(path => {
     if (isInsideConverted(path) || path.parent.node.type === 'VariableDeclarator') return path.node
-    convertBase(path.node)
+    return convertBase(path.node)
   })
 
   return collection
