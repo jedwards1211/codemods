@@ -22,10 +22,10 @@ import type {Classes} from 'material-ui-render-props-styles'
 import createStyled from "material-ui-render-props-styles";
 import type { Theme } from "../src/universal/theme";
 
-const barStyles = {
+const barStyles = (theme: Theme) => ({
   root: {
   },
-}
+})
 
 type BarProps = {
   +classes?: Shape<typeof barStyles>,

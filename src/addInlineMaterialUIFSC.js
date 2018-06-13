@@ -7,10 +7,10 @@ const ensureImports = require('./ensureImports')
 function addInlineMaterialUIFSC({file, code, name, position}) {
   name = upperFirst(name)
   const styles = `${lowerFirst(name)}Styles`
-  code = `${code.substring(0, position)}const ${styles} = {
+  code = `${code.substring(0, position)}const ${styles} = (theme: Theme) => ({
   root: {
   },
-}
+})
 
 type ${name}Props = {
   +classes?: Shape<typeof ${styles}>,
