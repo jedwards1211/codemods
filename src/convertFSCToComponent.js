@@ -1,6 +1,6 @@
 const j = require('jscodeshift')
 
-function convertFSCToComponent(collection) {
+function convertFSCToComponent(collection, filter = () => true) {
   function convertBase(node, id) {
     const propsParam = node.params[0]
     const renderBody = []
@@ -51,11 +51,11 @@ function convertFSCToComponent(collection) {
     return decl
   }
 
-  collection.find(j.FunctionDeclaration).replaceWith(path =>
+  collection.find(j.FunctionDeclaration).filter(filter).replaceWith(path =>
     convertBase(path.node, path.node.id)
   )
 
-  collection.find(j.VariableDeclaration).replaceWith(path => {
+  collection.find(j.VariableDeclaration).filter(filter).replaceWith(path => {
     if (path.node.declarations.length > 1) return path.node
     const [declarator] = path.node.declarations
     if (
@@ -75,12 +75,12 @@ function convertFSCToComponent(collection) {
     return false
   }
 
-  collection.find(j.VariableDeclarator, {init: {type: 'ArrowFunctionExpression'}}).replaceWith(path => {
+  collection.find(j.VariableDeclarator, {init: {type: 'ArrowFunctionExpression'}}).filter(filter).replaceWith(path => {
     if (isInsideConverted(path) || path.parent.node.type === 'VariableDeclaration') return path.node
     return convertBase(path.node.init, path.node.id)
   })
 
-  collection.find(j.ArrowFunctionExpression).replaceWith(path => {
+  collection.find(j.ArrowFunctionExpression).filter(filter).replaceWith(path => {
     if (isInsideConverted(path) || path.parent.node.type === 'VariableDeclarator') return path.node
     return convertBase(path.node)
   })
