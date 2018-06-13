@@ -28,7 +28,7 @@ const barStyles = (theme: Theme) => ({
 })
 
 type BarProps = {
-  +classes?: Shape<typeof barStyles>,
+  +classes?: $Shape<typeof barStyles>,
 }
 
 const BarStyles = createStyled(barStyles, {name: 'Bar'})

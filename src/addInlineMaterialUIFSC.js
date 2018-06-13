@@ -13,7 +13,7 @@ function addInlineMaterialUIFSC({file, code, name, position}) {
 })
 
 type ${name}Props = {
-  +classes?: Shape<typeof ${styles}>,
+  +classes?: $Shape<typeof ${styles}>,
 }
 
 const ${name}Styles = createStyled(${styles}, {name: '${name}'})
