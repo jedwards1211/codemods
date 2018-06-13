@@ -12,15 +12,20 @@ describe(`explodeImports`, function () {
   it(`works`, function () {
     const root = j(`
 import Rubix, {Grid as _Grid, Row, Col} from '@jcoreio/rubix'
+import type Rubix, {Grid as _Grid, Row, Col} from '@jcoreio/rubix'
 `)
 
     explodeImports(root, '@jcoreio/rubix')
 
     expect(root.toSource()).to.equal(`
 import Rubix from '@jcoreio/rubix';
-import { Grid as _Grid } from "@jcoreio/rubix/Grid";
-import { Row } from "@jcoreio/rubix/Row";
-import { Col } from "@jcoreio/rubix/Col";
+import _Grid from "@jcoreio/rubix/Grid";
+import Row from "@jcoreio/rubix/Row";
+import Col from "@jcoreio/rubix/Col";
+import type Rubix from '@jcoreio/rubix';
+import type _Grid from "@jcoreio/rubix/Grid";
+import type Row from "@jcoreio/rubix/Row";
+import type Col from "@jcoreio/rubix/Col";
 `)
   })
 })

@@ -7,7 +7,14 @@ function explodeImports(root, pkg) {
       if (specifier.type === 'ImportDefaultSpecifier') {
         return j.importDeclaration([specifier], node.source, node.importKind)
       }
-      return j.importDeclaration([specifier], j.stringLiteral(`${pkg}/${specifier.imported.name}`))
+      const result = j.importDeclaration(
+        [j.importDefaultSpecifier(specifier.local)],
+        j.stringLiteral(`${pkg}/${specifier.imported.name}`,
+        node.importKind
+      ))
+      // for some reason the importKind doesn't always get set by the factory
+      if (node.importKind) result.importKind = node.importKind
+      return result
     })
   })
   return root
