@@ -6,8 +6,13 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 These are a bunch of codemods I've developed to speed of my dev process.  I'm
-just stashing this on GitHub for myself and not making much effort to offer
-documentation, but some of the available codemods are:
+just stashing this on GitHub for myself and not making too much effort to offer
+documentation.
+
+Unless otherwise specified, the codemods are not structured to be passed to
+`jscodeshift` as the `-t` argument -- rather, I am calling them from
+[`atom-morpher`](https://github.com/suchipi/atom-morpher) scripts to transform
+code in the editor.
 
 ## General
 
