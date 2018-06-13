@@ -1,5 +1,4 @@
 const j = require('jscodeshift').withParser('babylon')
-const getImportedSpecifiers = require('./getImportedSpecifiers')
 const addImportDeclaration = require('./addImportDeclaration')
 
 function ensureImport(root, kind, name, pkg) {
@@ -30,4 +29,4 @@ function ensureImport(root, kind, name, pkg) {
   return name
 }
 
-module.exports = ensureImports
+module.exports = ensureImport
