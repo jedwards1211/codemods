@@ -1,5 +1,3 @@
-const j = require('jscodeshift')
-
 function convertLambdaToSimple(lambdas) {
   lambdas.forEach(({node}) => {
     if (node.type !== 'ArrowFunctionExpression') return
