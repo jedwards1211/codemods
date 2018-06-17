@@ -1,8 +1,6 @@
-// @flow
-
 const identifierFromFile = require('./identifierFromFile')
 
-function createReactComponent(file: string): string {
+function createReactComponent(file) {
   const name = identifierFromFile(file)
   return `// @flow
 

@@ -80,7 +80,7 @@ function addHasManyAssociation({root, position, target, primaryKeyType, as, asSi
       ),
       [
         j.identifier(target),
-        jsonExpression({as, ...options || {}})
+        jsonExpression(Object.assign({}, as, options || {}))
       ]
     )
   )))

@@ -3,6 +3,20 @@
 const { TextBuffer } = require("atom")
 const { upperFirst } = require('lodash')
 
+function processSelected(handler) {
+  return (input) => {
+    const {text, selection} = input
+    const buffer = new TextBuffer({ text })
+    const selectedText = buffer.getTextInRange(selection)
+    const result = handler(Object.assign(input, {selectedText}))
+    if (result.selectedText) {
+      buffer.setTextInRange(selection, result.selectedText)
+      result.text = buffer.getText()
+    }
+    return result
+  }
+}
+
 function getCharacterIndexRange(text, selection) {
   if (!(text instanceof TextBuffer)) text = new TextBuffer({text})
   return {
@@ -138,6 +152,13 @@ module.exports = function () {
       })
     },
     {
+      name: 'ifsc',
+      description: 'inline React Functional Stateless component',
+      onSelected: processSelected(({selectedText}) => ({
+        selectedText: require('./createInlineFSC')(selectedText.trim() || null, activeFile()),
+      })),
+    },
+    {
       name: 'comp',
       description: 'React Component',
       onSelected: () => ({
@@ -161,6 +182,18 @@ module.exports = function () {
             position,
           })
         }
+      }
+    },
+    {
+      name: 'addStylesToFSC',
+      description: 'add Material UI styles to functional stateless component',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./addStylesToFSC')(
+          root, activeFile(), pathInRange(text, selection)
+        )
+        return {text: root.toSource()}
       }
     },
     {

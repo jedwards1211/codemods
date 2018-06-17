@@ -1,8 +1,6 @@
-// @flow
-
 const identifierFromFile = require('./identifierFromFile')
 
-function createFSC(file: string): string {
+function createFSC(file) {
   const name = identifierFromFile(file)
   return `// @flow
 

@@ -94,7 +94,7 @@ function addBelongsToManyAssociation({root, position, target, through, primaryKe
       ),
       [
         j.identifier(target),
-        jsonExpression({through: j.identifier(through), as, ...options || {}})
+        jsonExpression(Object.assign({through: j.identifier(through)}, as, options || {}))
       ]
     )
   )))

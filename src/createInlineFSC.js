@@ -1,8 +1,6 @@
-// @flow
-
 const identifierFromFile = require('./identifierFromFile')
 
-function createInlineFSC(name: ?string, file: string): string {
+function createInlineFSC(name, file) {
   if (!name) name = identifierFromFile(file)
   return `export type ${name}Props = {
 }

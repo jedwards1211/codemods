@@ -1,8 +1,6 @@
-// @flow
-
 const identifierFromFile = require('./identifierFromFile')
 
-function createSequelizeJoinModel(file: string): string {
+function createSequelizeJoinModel(file) {
   const name = identifierFromFile(file)
   return `// @flow
 /* @flow-runtime enable */

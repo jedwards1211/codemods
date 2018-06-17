@@ -1,9 +1,7 @@
-// @flow
-
 const pathToMuiTheme = require('./pathToMuiTheme')
 const identifierFromFile = require('./identifierFromFile')
 
-function createMaterialUIComponent(file: string): string {
+function createMaterialUIComponent(file) {
   const name = identifierFromFile(file)
   return `// @flow
 
