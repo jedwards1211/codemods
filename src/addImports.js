@@ -1,9 +1,9 @@
 const j = require('jscodeshift')
 const findImports = require('./findImports')
+const insertProgramStatement = require('./insertProgramStatement')
 
 module.exports = function addImports(root, statement, options = {}) {
   const found = findImports(root, statement, options)
-  const program = root.find(j.Program).at(0).nodes()[0]
 
   if (statement.type === 'ImportDeclaration') {
     const {importKind} = statement
@@ -25,7 +25,7 @@ module.exports = function addImports(root, statement, options = {}) {
         if (allImports.size()) {
           allImports.paths()[allImports.size() - 1].insertAfter(newDeclaration)
         } else {
-          program.body.unshift(newDeclaration)
+          insertProgramStatement(root, 0, newDeclaration)
         }
         existing = root.find(j.ImportDeclaration, {importKind, source})
       }
@@ -78,7 +78,7 @@ module.exports = function addImports(root, statement, options = {}) {
           if (allImports.size()) {
             allImports.paths()[allImports.size() - 1].insertAfter(newDeclaration)
           } else {
-            program.body.unshift(newDeclaration)
+            insertProgramStatement(root, 0, newDeclaration)
           }
         }
       }
@@ -95,7 +95,7 @@ module.exports = function addImports(root, statement, options = {}) {
         if (allImports.size()) {
           allImports.paths()[allImports.size() - 1].insertAfter(newDeclaration)
         } else {
-          program.body.unshift(newDeclaration)
+          insertProgramStatement(root, 0, newDeclaration)
         }
       }
     }

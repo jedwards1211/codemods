@@ -6,12 +6,33 @@ module.exports = function insertProgramStatement(root, position, statement) {
     node.end >= position
   )
   if (index < 0) index = program.body.length
-  if (index === 0 && program.body.length) {
-    if (program.body[0].leadingComments) {
-      statement.leadingComments = program.body[0].leadingComments
-      delete program.body[0].leadingComments
+  if (index === 0) {
+    if (program.body.length && program.body[0].comments) {
+      statement.comments = [
+        ...program.body[0].comments,
+        ...statement.comments || [],
+      ]
+      delete program.body[0].comments
+    } else if (program.comments) {
+      program.comments.forEach(comment => {
+        comment.leading = true
+      })
+      statement.comments = [
+        ...program.comments,
+        ...statement.comments || [],
+      ]
+      program.comments = []
+    }
+    if (statement.comments) {
+      statement.comments.forEach(comment => {
+        delete comment.loc
+        delete comment.start
+        delete comment.end
+      })
+      delete statement.loc
+      delete statement.start
+      delete statement.end
     }
   }
   program.body.splice(index, 0, statement)
-  console.log(program.body)
 }
