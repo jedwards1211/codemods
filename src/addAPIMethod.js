@@ -14,28 +14,29 @@ module.exports = function addAPIMethod(root, position, name) {
   const lower = lowerFirst(name)
   const upper = upperFirst(name)
 
-  insertProgramStatement(root, position, statement([`export async function ${lower}(options: ${upper}Options): Promise<RETURN_TYPE> {
-  await assertCan${upper}(options)
+  insertProgramStatement(
+    root,
+    position,
+    statement([`export type ${upper}Options = {
+  +actorId: number,
 }
 
-`]))
+`]),
+    statement([`export const ${upper}OptionsType = (${reify}: ${Type}<${upper}Options>)
 
-  insertProgramStatement(root, position, statement([`export async function assertCan${upper}(options: ${upper}Options): Promise<void> {
+`]),
+    statement([`export async function assertCan${upper}(options: ${upper}Options): Promise<void> {
   ${assert}(${upper}OptionsType, options)
   const {actorId} = options
 }
 
-`]))
-
-  insertProgramStatement(root, position, statement([`export const ${upper}OptionsType = (${reify}: ${Type}<${upper}Options>)
-
-`]))
-
-  insertProgramStatement(root, position, statement([`export type ${upper}Options = {
-  +actorId: number,
+`]),
+    statement([`export async function ${lower}(options: ${upper}Options): Promise<RETURN_TYPE> {
+  await assertCan${upper}(options)
 }
 
-`]))
+`])
+  )
 
   return root
 }

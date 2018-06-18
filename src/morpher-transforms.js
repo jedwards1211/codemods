@@ -218,6 +218,23 @@ module.exports = function () {
         selectedText: require('./addEnum')(selectedText.trim() || null, activeFile()),
       })),
     },
+    {
+      name: 'api-method',
+      description: 'add API method',
+      onSelected: ({text, selection}) => {
+        const buffer = new TextBuffer({ text })
+        const name = buffer.getTextInRange(selection).trim()
+        if (!name) throw new Error('You must select a name for the method')
+        const position = buffer.characterIndexForPosition(selection.start)
+        buffer.setTextInRange(selection, '')
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(buffer.getText())
+        require('./addAPIMethod')(root, position, name)
+        return {
+          text: root.toSource(),
+        }
+      },
+    },
     ...[
       'belongsTo',
       'belongsToMany',

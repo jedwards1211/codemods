@@ -1,6 +1,7 @@
 const j = require('jscodeshift').withParser('babylon')
 
-module.exports = function insertProgramStatement(root, position, statement) {
+module.exports = function insertProgramStatement(root, position, ...statements) {
+  const statement = statements[0]
   const program = root.find(j.Program).at(0).nodes()[0]
   let index = program.body.findIndex(node =>
     node.end >= position
@@ -34,5 +35,5 @@ module.exports = function insertProgramStatement(root, position, statement) {
       delete statement.end
     }
   }
-  program.body.splice(index, 0, statement)
+  program.body.splice(index, 0, ...statements)
 }
