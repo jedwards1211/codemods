@@ -8,8 +8,10 @@ const {statement} = j.template
 
 module.exports = function addAPIMethod(root, position, name) {
   insertLeadingComment(root, ' @flow-runtime enable')
-  const {reify, assert} = addImports(root, statement`import {reify, assert} from 'flow-runtime'`)
+  const {reify} = addImports(root, statement`import {reify} from 'flow-runtime'`)
   const {Type} = addImports(root, statement`import type {Type} from 'flow-runtime'`)
+
+  const {assert} = addImports(root, statement`import {assert} from './APIError'`)
 
   const lower = lowerFirst(name)
   const upper = upperFirst(name)

@@ -17,8 +17,9 @@ import { reify } from "flow-runtime";
     addAPIMethod(root, code.length, 'CreateUser')
     expect(root.toSource()).to.equal(`// @flow
 // @flow-runtime enable
-import { reify, assert } from "flow-runtime";
+import { reify } from "flow-runtime";
 import type { Type } from "flow-runtime";
+import { assert } from "./APIError";
 export type CreateUserOptions = {
   +actorId: number,
 }
