@@ -11,10 +11,10 @@ module.exports = function addImports(root, statement, options = {}) {
     let existing = root.find(j.ImportDeclaration, {importKind, source})
     for (let specifier of statement.specifiers) {
       if (found[specifier.local.name]) continue
+      found[specifier.local.name] = specifier.local.name
       if (existing.size()) {
         const last = existing.paths()[existing.size() - 1].node
         last.specifiers.push(specifier)
-        found[specifier.local.name] = specifier.local.name
       } else {
         const newDeclaration = j.importDeclaration(
           [specifier],
@@ -63,6 +63,7 @@ module.exports = function addImports(root, statement, options = {}) {
     if (declarator.id.type === 'ObjectPattern') {
       for (let prop of declarator.id.properties) {
         if (found[prop.value.name]) continue
+        found[prop.value.name] = prop.value.name
         if (existing.size()) {
           const last = existing.paths()[existing.size() - 1].node
           last.id.properties.push(prop)
@@ -83,6 +84,7 @@ module.exports = function addImports(root, statement, options = {}) {
       }
     } else if (declarator.id.type === 'Identifier') {
       if (!found[declarator.id.name]) {
+        found[declarator.id.name] = declarator.id.name
         const newDeclaration = j.variableDeclaration('const', [
           j.variableDeclarator(
             declarator.id,
