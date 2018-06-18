@@ -6,9 +6,9 @@ const addImports = require('./addImports')
 const pathToMuiTheme = require('./pathToMuiTheme')
 
 module.exports = function addStylesToComponent(root, file, filter = () => true) {
-  addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`)
-  addImports(root, statement`import type {Classes} from 'material-ui-render-props-styles'`)
-  addImports(root, statement([`import type {Theme} from '${pathToMuiTheme(file)}'`]))
+  const {createStyled} = addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`)
+  const {Classes} = addImports(root, statement`import type {Classes} from 'material-ui-render-props-styles'`)
+  const {Theme} = addImports(root, statement([`import type {Theme} from '${pathToMuiTheme(file)}'`]))
 
   const element = root.find(j.JSXElement).filter(filter).at(0)
   const fsc = element.closest(j.ArrowFunctionExpression).at(0)
@@ -20,11 +20,11 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
 
   const variableDeclaration = componentDeclarator.closest(j.VariableDeclaration)
   variableDeclaration.insertBefore(
-    `const ${lowerFirst(componentName)}Styles = (theme: Theme) => ({
+    `const ${lowerFirst(componentName)}Styles = (theme: ${Theme}) => ({
 })`
   )
   variableDeclaration.insertBefore(
-    `const ${componentName}Styles = createStyled(${lowerFirst(componentName)}Styles, {name: '${componentName}'})`
+    `const ${componentName}Styles = ${createStyled}(${lowerFirst(componentName)}Styles, {name: '${componentName}'})`
   )
 
   const classesIdentifier = j.identifier('classes')
@@ -34,7 +34,7 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
   element.replaceWith(path => {
     return `(
   <${componentName}Styles>
-    {({classes}: {classes: Classes<typeof ${lowerFirst(componentName)}Styles>}) => (
+    {({classes}: {classes: ${Classes}<typeof ${lowerFirst(componentName)}Styles>}) => (
 ${recast.print(path.node).toString().replace(/^/gm, '      ')}
     )}
   </${componentName}Styles>
