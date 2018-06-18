@@ -55,7 +55,7 @@ function addHasOneAssociation({root, position, target, primaryKeyType, as, optio
       ),
       [
         j.identifier(target),
-        jsonExpression(Object.assign({}, as, options || {}))
+        jsonExpression(Object.assign({as}, options || {}))
       ]
     )
   )))

@@ -211,6 +211,13 @@ module.exports = function () {
         text: require('./createSequelizeJoinModel')(activeFile()),
       })
     },
+    {
+      name: 'enum',
+      description: 'add enum',
+      onSelected: processSelected(({selectedText}) => ({
+        selectedText: require('./addEnum')(selectedText.trim() || null, activeFile()),
+      })),
+    },
     ...[
       'belongsTo',
       'belongsToMany',

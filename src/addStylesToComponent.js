@@ -6,7 +6,7 @@ const addImports = require('./addImports')
 const pathToMuiTheme = require('./pathToMuiTheme')
 
 module.exports = function addStylesToComponent(root, file, filter = () => true) {
-  const {createStyled} = addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`)
+  const {createStyled} = addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`, {commonjs: true})
   const {Classes} = addImports(root, statement`import type {Classes} from 'material-ui-render-props-styles'`)
   const {Theme} = addImports(root, statement([`import type {Theme} from '${pathToMuiTheme(file)}'`]))
 

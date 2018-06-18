@@ -55,7 +55,7 @@ function addBelongsToAssociation({root, position, target, primaryKeyType, as, op
       ),
       [
         j.identifier(target),
-        jsonExpression(Object.assign({}, as, options || {}))
+        jsonExpression(Object.assign({as}, options || {}))
       ]
     )
   )))

@@ -1,9 +1,9 @@
 const path = require('path')
-const {camelCase, upperFirst} = require('lodash')
+const {upperFirst} = require('lodash')
 const stripExtension = require('./stripExtension')
 
 function identifierFromFile(file) {
-  const result = camelCase(stripExtension(path.basename(file)))
+  const result = stripExtension(path.basename(file))
   if (file[0].toUpperCase() === file[0]) return upperFirst(result)
   return result
 }
