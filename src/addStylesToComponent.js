@@ -1,34 +1,20 @@
-const j = require('jscodeshift')
+const j = require('jscodeshift').withParser('babylon')
+const {statement} = j.template
 const recast = require('recast')
 const {lowerFirst} = require('lodash')
-const ensureImports = require('./ensureImports')
-const ensureDefaultImport = require('./ensureDefaultImport')
+const addImports = require('./addImports')
 const pathToMuiTheme = require('./pathToMuiTheme')
 
-function addStylesToFSC(root, file, filter = () => true) {
-  ensureDefaultImport(root, 'value', 'createStyled', 'material-ui-render-props-styles')
-  ensureImports(root, 'type', ['Classes'], 'material-ui-render-props-styles')
-  ensureImports(root, 'type', ['Theme'], pathToMuiTheme(file))
+module.exports = function addStylesToComponent(root, file, filter = () => true) {
+  addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`)
+  addImports(root, statement`import type {Classes} from 'material-ui-render-props-styles'`)
+  addImports(root, statement([`import type {Theme} from '${pathToMuiTheme(file)}'`]))
 
-  let componentDeclarator
-
-  const returnStatement = root.find(j.ReturnStatement, {
-    argument: {type: 'JSXElement'}
-  })
-
-  if (returnStatement.length) {
-    componentDeclarator = returnStatement.closest(j.VariableDeclarator)
-  } else {
-    componentDeclarator = root.find(j.VariableDeclarator, {
-      init: {
-        type: 'ArrowFunctionExpression',
-        body: {
-          type: 'JSXElement',
-        }
-      }
-    })
-  }
-  const element = componentDeclarator.find(j.JSXElement).at(0)
+  const element = root.find(j.JSXElement).filter(filter).at(0)
+  const fsc = element.closest(j.ArrowFunctionExpression).at(0)
+  let componentDeclarator = fsc.closest(j.VariableDeclarator)
+  if (!componentDeclarator.size()) componentDeclarator = element.closest(j.ClassDeclaration)
+  if (!componentDeclarator.size()) throw new Error("couldn't get a name for the component")
 
   const componentName = componentDeclarator.nodes()[0].id.name
 
@@ -55,5 +41,3 @@ ${recast.print(path.node).toString().replace(/^/gm, '      ')}
 )`
   })
 }
-
-module.exports = addStylesToFSC

@@ -2,6 +2,7 @@
 
 const { TextBuffer } = require("atom")
 const { upperFirst } = require('lodash')
+const pathsToTransformFilter = require('./pathsToTransformFilter')
 
 function processSelected(handler) {
   return (input) => {
@@ -27,7 +28,7 @@ function getCharacterIndexRange(text, selection) {
 
 function pathInRange(text, selection) {
   const {start, end} = getCharacterIndexRange(text, selection)
-  return path => path.node.start <= end && path.node.end >= start
+  return pathsToTransformFilter(start, end)
 }
 
 function activeBuffer() {
@@ -185,12 +186,12 @@ module.exports = function () {
       }
     },
     {
-      name: 'addStylesToFSC',
-      description: 'add Material UI styles to functional stateless component',
+      name: 'addStylesToComponent',
+      description: 'add Material UI styles to a component',
       onSelected: ({text, selection}) => {
         const j = require('jscodeshift').withParser('babylon')
         const root = j(text)
-        require('./addStylesToFSC')(
+        require('./addStylesToComponent')(
           root, activeFile(), pathInRange(text, selection)
         )
         return {text: root.toSource()}
