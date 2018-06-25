@@ -125,6 +125,18 @@ module.exports = function () {
       }
     },
     {
+      name: 'removeSurroundingBlock',
+      description: "remove surrounding block",
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./removeSurroundingBlock')(
+          root, pathInRange(text, selection)
+        )
+        return {text: root.toSource()}
+      }
+    },
+    {
       name: 'defun',
       description: 'Default Function export',
       onSelected: () => ({
@@ -230,6 +242,40 @@ module.exports = function () {
         const j = require('jscodeshift').withParser('babylon')
         const root = j(buffer.getText())
         require('./addAPIMethod')(root, position, name)
+        return {
+          text: root.toSource(),
+        }
+      },
+    },
+    {
+      name: 'find-one-api-method',
+      description: 'add findOne API method',
+      onSelected: ({text, selection}) => {
+        const buffer = new TextBuffer({ text })
+        const name = buffer.getTextInRange(selection).trim()
+        if (!name) throw new Error('You must select a name for the method')
+        const position = buffer.characterIndexForPosition(selection.start)
+        buffer.setTextInRange(selection, '')
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(buffer.getText())
+        require('./addFindOneAPIMethod')(root, position, name)
+        return {
+          text: root.toSource(),
+        }
+      },
+    },
+    {
+      name: 'find-all-api-method',
+      description: 'add findAll API method',
+      onSelected: ({text, selection}) => {
+        const buffer = new TextBuffer({ text })
+        const name = buffer.getTextInRange(selection).trim()
+        if (!name) throw new Error('You must select a name for the method')
+        const position = buffer.characterIndexForPosition(selection.start)
+        buffer.setTextInRange(selection, '')
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(buffer.getText())
+        require('./addFindAllAPIMethod')(root, position, name)
         return {
           text: root.toSource(),
         }

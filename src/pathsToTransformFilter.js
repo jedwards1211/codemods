@@ -7,7 +7,7 @@ function * ancestorsOfPath(path) {
   }
 }
 
-module.exports = function pathsToTransformFilter(start, end) {
+module.exports = function pathsToTransformFilter(start, end = start) {
   const selectPathSet = createSelector(
     paths => paths,
     paths => {
