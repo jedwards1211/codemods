@@ -113,6 +113,32 @@ module.exports = function () {
       }
     },
     {
+      name: 'reformatObjectExpression',
+      description: "Break up object expression into multiple lines",
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        const expressions = root.find(j.ObjectExpression).filter(
+          pathInRange(text, selection)
+        )
+        require('./reformat')(expressions)
+        return {text: root.toSource()}
+      }
+    },
+    {
+      name: 'reformatObjectTypeAnnotation',
+      description: "Break up object type annotation into multiple lines",
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        const expressions = root.find(j.ObjectTypeAnnotation).filter(
+          pathInRange(text, selection)
+        )
+        require('./reformat')(expressions)
+        return {text: root.toSource()}
+      }
+    },
+    {
       name: 'convertFSCToComponent',
       description: "Convert React Stateless Function Component to a Component class",
       onSelected: ({text, selection}) => {
@@ -205,6 +231,18 @@ module.exports = function () {
         const root = j(text)
         require('./addStylesToComponent')(
           root, activeFile(), pathInRange(text, selection)
+        )
+        return {text: root.toSource()}
+      }
+    },
+    {
+      name: 'convertStringPropToTemplate',
+      description: 'convert a JSX string prop to a template literal',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./convertStringPropToTemplate')(
+          root, pathInRange(text, selection)
         )
         return {text: root.toSource()}
       }
