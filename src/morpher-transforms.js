@@ -262,10 +262,17 @@ module.exports = function () {
       })
     },
     {
-      name: 'enum',
-      description: 'add enum',
+      name: 'ienum',
+      description: 'add inline enum',
       onSelected: processSelected(({selectedText}) => ({
         selectedText: require('./addEnum')(selectedText.trim() || null, activeFile()),
+      })),
+    },
+    {
+      name: 'enum',
+      description: 'create enum file',
+      onSelected: processSelected(({selectedText}) => ({
+        selectedText: require('./createEnumFile')(activeFile(), selectedText),
       })),
     },
     {
