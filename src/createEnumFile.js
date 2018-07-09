@@ -22,7 +22,7 @@ module.exports = function createEnumFile(file, inputText) {
 // @flow-runtime enable
 
 export const ${plural} = {
-  ${map(constants, (value, key) => `${key}: {displayText: ${JSON.stringify(startCase(lowerCase(value)))}},`).join('\n  ')}
+  ${map(constants, (value, key) => `${key}: {value: ${value}, displayText: ${JSON.stringify(startCase(lowerCase(key)))}},`).join('\n  ')}
 }
 
 export type ${singular} = $Keys<typeof ${plural}>

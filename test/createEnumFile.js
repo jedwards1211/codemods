@@ -17,10 +17,10 @@ RIGHT = 'right'
 // @flow-runtime enable
 
 export const Directions = {
-  UP: {displayText: "Up"},
-  DOWN: {displayText: "Down"},
-  LEFT: {displayText: "Left"},
-  RIGHT: {displayText: "Right"},
+  UP: {value: 'up', displayText: "Up"},
+  DOWN: {value: 'down', displayText: "Down"},
+  LEFT: {value: 'left', displayText: "Left"},
+  RIGHT: {value: 'right', displayText: "Right"},
 }
 
 export type Direction = $Keys<typeof Directions>
@@ -44,10 +44,10 @@ RIGHT
 // @flow-runtime enable
 
 export const Directions = {
-  UP: {displayText: "Up"},
-  DOWN: {displayText: "Down"},
-  LEFT: {displayText: "Left"},
-  RIGHT: {displayText: "Right"},
+  UP: {value: 'UP', displayText: "Up"},
+  DOWN: {value: 'DOWN', displayText: "Down"},
+  LEFT: {value: 'LEFT', displayText: "Left"},
+  RIGHT: {value: 'RIGHT', displayText: "Right"},
 }
 
 export type Direction = $Keys<typeof Directions>
