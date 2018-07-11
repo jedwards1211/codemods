@@ -1,7 +1,6 @@
 const j = require('jscodeshift').withParser('babylon')
 const upperFirst = require('lodash.upperfirst')
 const insertNodes = require('./insertNodes')
-const jsonExpression = require('./jsonExpression')
 const {singularize, pluralize} = require('inflection')
 const ensureDefaultImport = require('./ensureDefaultImport')
 const ensureImports = require('./ensureImports')
@@ -9,6 +8,7 @@ const getModelClassDeclaration = require('./getModelClassDeclaration')
 const getInitAssociationsDeclaration = require('./getInitAssociationsDeclaration')
 const classProperty = require('./classProperty')
 const nullAny = require('./nullAny')
+const parseOptions = require('./parseOptions')
 
 function addHasManyAssociation({root, position, target, primaryKeyType, as, asSingular, asPlural, options}) {
   if (asPlural) {
@@ -23,6 +23,7 @@ function addHasManyAssociation({root, position, target, primaryKeyType, as, asSi
     asSingular = singularize(target)
   }
   if (!primaryKeyType) primaryKeyType = 'number'
+  options = parseOptions(options)
   ensureImports(root, 'value', ['Association'], 'sequelize')
   ensureImports(root, 'type', [
     'HasManyGetMany',
@@ -80,7 +81,10 @@ function addHasManyAssociation({root, position, target, primaryKeyType, as, asSi
       ),
       [
         j.identifier(target),
-        jsonExpression(Object.assign({as}, options || {}))
+        j.objectExpression([
+          j.objectProperty(j.identifier('as'), j.stringLiteral(as)),
+          ...(options ? options.properties : []),
+        ]),
       ]
     )
   )))

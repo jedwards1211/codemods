@@ -1,7 +1,6 @@
 const j = require('jscodeshift').withParser('babylon')
 const upperFirst = require('lodash.upperfirst')
 const insertNodes = require('./insertNodes')
-const jsonExpression = require('./jsonExpression')
 const {singularize, pluralize} = require('inflection')
 const ensureDefaultImport = require('./ensureDefaultImport')
 const ensureImports = require('./ensureImports')
@@ -9,6 +8,7 @@ const getModelClassDeclaration = require('./getModelClassDeclaration')
 const getInitAssociationsDeclaration = require('./getInitAssociationsDeclaration')
 const classProperty = require('./classProperty')
 const nullAny = require('./nullAny')
+const parseOptions = require('./parseOptions')
 
 function addBelongsToManyAssociation({root, position, target, through, primaryKeyType, as, asSingular, asPlural, options}) {
   if (asPlural) {
@@ -24,6 +24,7 @@ function addBelongsToManyAssociation({root, position, target, through, primaryKe
   }
   if (!as) as = asPlural
   if (!primaryKeyType) primaryKeyType = 'number'
+  options = parseOptions(options)
   ensureImports(root, 'value', ['Association'], 'sequelize')
   ensureImports(root, 'type', [
     'BelongsToManyGetMany',
@@ -94,7 +95,11 @@ function addBelongsToManyAssociation({root, position, target, through, primaryKe
       ),
       [
         j.identifier(target),
-        jsonExpression(Object.assign({through: j.identifier(through), as}, options || {}))
+        j.objectExpression([
+          j.objectProperty(j.identifier('through'), j.identifier(through)),
+          j.objectProperty(j.identifier('as'), j.stringLiteral(as)),
+          ...(options ? options.properties : []),
+        ]),
       ]
     )
   )))

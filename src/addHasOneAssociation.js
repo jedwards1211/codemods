@@ -1,17 +1,18 @@
 const j = require('jscodeshift').withParser('babylon')
 const upperFirst = require('lodash.upperfirst')
 const insertNodes = require('./insertNodes')
-const jsonExpression = require('./jsonExpression')
 const ensureDefaultImport = require('./ensureDefaultImport')
 const ensureImports = require('./ensureImports')
 const getModelClassDeclaration = require('./getModelClassDeclaration')
 const getInitAssociationsDeclaration = require('./getInitAssociationsDeclaration')
 const classProperty = require('./classProperty')
 const nullAny = require('./nullAny')
+const parseOptions = require('./parseOptions')
 
 function addHasOneAssociation({root, position, target, primaryKeyType, as, options}) {
   if (!as) as = target
   if (!primaryKeyType) primaryKeyType = 'number'
+  options = parseOptions(options)
   ensureImports(root, 'value', ['Association'], 'sequelize')
   ensureImports(root, 'type', [
     'HasOneGetOne',
@@ -55,7 +56,10 @@ function addHasOneAssociation({root, position, target, primaryKeyType, as, optio
       ),
       [
         j.identifier(target),
-        jsonExpression(Object.assign({as}, options || {}))
+        j.objectExpression([
+          j.objectProperty(j.identifier('as'), j.stringLiteral(as)),
+          ...(options ? options.properties : []),
+        ]),
       ]
     )
   )))

@@ -41,30 +41,6 @@ function activeFile() {
   return activeBuffer().file.path
 }
 
-function sequelizeAssociationTransform(name) {
-  return {
-    name,
-    description: `Add Sequelize ${name} Association`,
-    onSelected({text, selection}) {
-      const buffer = new TextBuffer({ text })
-      const selectedText = buffer.getTextInRange(selection)
-
-      const options = eval(`({${selectedText}})`)
-      options.position = buffer.characterIndexForPosition(selection.start)
-
-      buffer.setTextInRange(selection, '')
-
-      const addBelongsToAssociation = require(`./add${upperFirst(name)}Association`)
-      const j = require('jscodeshift').withParser('babylon')
-      options.root = j(buffer.getText())
-
-      addBelongsToAssociation(options)
-
-      return {text: options.root.toSource()}
-    }
-  }
-}
-
 module.exports = function () {
   const path = require('path')
   const modules = require('fs').readdirSync(__dirname)
@@ -84,6 +60,26 @@ module.exports = function () {
         )
         require('./convertLambdaToReturn')(lambdas)
         return {text: root.toSource()}
+      }
+    },
+    {
+      name: 'temp',
+      description: "Temporary",
+      variables: {
+        firstName: {label: 'First Name'},
+        lastName: {label: 'Last Name'},
+        foo: {},
+        bar: {},
+        baz: {},
+        qux: {},
+        glorm: {},
+        blag: {},
+        qlob: {},
+        flaog: {},
+        lnd98: {},
+      },
+      onSelected: ({text, selection}) => {
+        return text
       }
     },
     {
@@ -271,8 +267,15 @@ module.exports = function () {
     {
       name: 'enum',
       description: 'create enum file',
-      onSelected: processSelected(({selectedText}) => ({
-        selectedText: require('./createEnumFile')(activeFile(), selectedText),
+      variables: ({selectedText}) => ({
+        name: {label: 'Name', defaultValue: selectedText || require('./identifierFromFile')(activeFile())},
+        values: {label: 'Values (one per line, format: identifier [= value])', multiline: true},
+      }),
+      onSelected: processSelected(({selectedText, variableValues}) => ({
+        selectedText: require('./createEnumFile')(
+          variableValues.name,
+          variableValues.values,
+        ),
       })),
     },
     {
@@ -326,11 +329,86 @@ module.exports = function () {
         }
       },
     },
-    ...[
-      'belongsTo',
-      'belongsToMany',
-      'hasMany',
-      'hasOne',
-    ].map(sequelizeAssociationTransform),
+    {
+      name: 'belongsTo',
+      description: 'add sequelize belongsTo association',
+      variables: {
+        target: {label: 'target model (required)'},
+        as: {label: 'as'},
+        primaryKeyType: {label: 'primary key type', defaultValue: 'number'},
+        options: {label: 'options', multiline: true},
+      },
+      onSelected: ({text, selection, variableValues}) => {
+        const root = require('jscodeshift').withParser('babylon')(text)
+        require('./addBelongsToAssociation')({
+          root,
+          position: activeBuffer().characterIndexForPosition(selection.start),
+          ...variableValues,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'belongsToMany',
+      description: 'add sequelize belongsToMany association',
+      variables: {
+        target: {label: 'target model (required)'},
+        through: {label: 'through model (required)'},
+        as: {label: 'as'},
+        asSingular: {label: 'asSingular'},
+        asPlural: {label: 'asPlural'},
+        primaryKeyType: {label: 'primary key type', defaultValue: 'number'},
+        options: {label: 'options', multiline: true},
+      },
+      onSelected: ({text, selection, variableValues}) => {
+        const root = require('jscodeshift').withParser('babylon')(text)
+        require('./addBelongsToManyAssociation')({
+          root,
+          position: activeBuffer().characterIndexForPosition(selection.start),
+          ...variableValues,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'hasMany',
+      description: 'add sequelize hasMany association',
+      variables: {
+        target: {label: 'target model (required)'},
+        as: {label: 'as'},
+        asSingular: {label: 'asSingular'},
+        asPlural: {label: 'asPlural'},
+        primaryKeyType: {label: 'primary key type', defaultValue: 'number'},
+        options: {label: 'options', multiline: true},
+      },
+      onSelected: ({text, selection, variableValues}) => {
+        const root = require('jscodeshift').withParser('babylon')(text)
+        require('./addHasManyAssociation')({
+          root,
+          position: activeBuffer().characterIndexForPosition(selection.start),
+          ...variableValues,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'hasOne',
+      description: 'add sequelize hasOne association',
+      variables: {
+        target: {label: 'target model (required)'},
+        as: {label: 'as'},
+        primaryKeyType: {label: 'primary key type', defaultValue: 'number'},
+        options: {label: 'options', multiline: true},
+      },
+      onSelected: ({text, selection, variableValues}) => {
+        const root = require('jscodeshift').withParser('babylon')(text)
+        require('./addHasOneAssociation')({
+          root,
+          position: activeBuffer().characterIndexForPosition(selection.start),
+          ...variableValues,
+        })
+        return {text: root.toSource()}
+      },
+    },
   ]
 }
