@@ -4,20 +4,6 @@ const identifierFromFile = require('./identifierFromFile')
 const { TextBuffer } = require("atom")
 const pathsToTransformFilter = require('./pathsToTransformFilter')
 
-function processSelected(handler) {
-  return (input) => {
-    const {text, selection} = input
-    const buffer = new TextBuffer({ text })
-    const selectedText = buffer.getTextInRange(selection)
-    const result = handler(Object.assign(input, {selectedText}))
-    if (result.selectedText) {
-      buffer.setTextInRange(selection, result.selectedText)
-      result.text = buffer.getText()
-    }
-    return result
-  }
-}
-
 function getCharacterIndexRange(text, selection) {
   if (!(text instanceof TextBuffer)) text = new TextBuffer({text})
   return {
@@ -216,9 +202,13 @@ module.exports = function () {
     {
       name: 'ifsc',
       description: 'inline React Functional Stateless component',
-      onSelected: processSelected(({selectedText}) => ({
-        selectedText: require('./createInlineFSC')(selectedText.trim() || null, activeFile()),
-      })),
+      variables: {
+        name: {label: 'component name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({variableValues: {name}}) => {
+        if (!name) throw new Error('You must select a name for the component')
+        return {selectedText: require('./createInlineFSC')(name, activeFile())}
+      },
     },
     {
       name: 'comp',
@@ -230,15 +220,15 @@ module.exports = function () {
     {
       name: 'mui-ifsc',
       description: 'inline Material UI styled functional stateless component',
-      onSelected: ({text, selection}) => {
-        const buffer = new TextBuffer({ text })
-        const name = buffer.getTextInRange(selection).trim()
+      variables: {
+        name: {label: 'component name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
         if (!name) throw new Error('You must select a name for the component')
-        const position = buffer.characterIndexForPosition(selection.start)
-        buffer.setTextInRange(selection, '')
+        const position = activeBuffer().characterIndexForPosition(selection.start)
         return {
-          text: require('./addInlineMaterialUIFSC')({
-            code: buffer.getText(),
+          selectedText: require('./addInlineMaterialUIFSC')({
+            code: text,
             file: activeFile(),
             name,
             position,
@@ -323,9 +313,9 @@ updatedAt: Date;`,
     {
       name: 'ienum',
       description: 'add inline enum',
-      onSelected: processSelected(({selectedText}) => ({
+      onSelected: ({selectedText}) => ({
         selectedText: require('./addEnum')(selectedText.trim() || null, activeFile()),
-      })),
+      }),
     },
     {
       name: 'enum',
@@ -334,12 +324,12 @@ updatedAt: Date;`,
         name: {label: 'Name', defaultValue: selectedText || require('./identifierFromFile')(activeFile())},
         values: {label: 'Values (one per line, format: identifier [= value])', multiline: true},
       }),
-      onSelected: processSelected(({selectedText, variableValues}) => ({
+      onSelected: ({selectedText, variableValues}) => ({
         selectedText: require('./createEnumFile')(
           variableValues.name,
           variableValues.values,
         ),
-      })),
+      }),
     },
     {
       name: 'api-method',
