@@ -344,52 +344,46 @@ updatedAt: Date;`,
     {
       name: 'api-method',
       description: 'add API method',
-      onSelected: ({text, selection}) => {
-        const buffer = new TextBuffer({ text })
-        const name = buffer.getTextInRange(selection).trim()
+      variables: {
+        name: {label: 'Name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
         if (!name) throw new Error('You must select a name for the method')
-        const position = buffer.characterIndexForPosition(selection.start)
-        buffer.setTextInRange(selection, '')
+        const position = activeBuffer().characterIndexForPosition(selection.start)
         const j = require('jscodeshift').withParser('babylon')
-        const root = j(buffer.getText())
+        const root = j(text)
         require('./addAPIMethod')(root, position, name)
-        return {
-          text: root.toSource(),
-        }
+        return {text: root.toSource()}
       },
     },
     {
       name: 'find-one-api-method',
       description: 'add findOne API method',
-      onSelected: ({text, selection}) => {
-        const buffer = new TextBuffer({ text })
-        const name = buffer.getTextInRange(selection).trim()
+      variables: {
+        name: {label: 'Name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
         if (!name) throw new Error('You must select a name for the method')
-        const position = buffer.characterIndexForPosition(selection.start)
-        buffer.setTextInRange(selection, '')
+        const position = activeBuffer().characterIndexForPosition(selection.start)
         const j = require('jscodeshift').withParser('babylon')
-        const root = j(buffer.getText())
+        const root = j(text)
         require('./addFindOneAPIMethod')(root, position, name)
-        return {
-          text: root.toSource(),
-        }
+        return {text: root.toSource()}
       },
     },
     {
       name: 'find-all-api-method',
       description: 'add findAll API method',
-      onSelected: ({text, selection}) => {
-        const buffer = new TextBuffer({ text })
-        const name = buffer.getTextInRange(selection).trim()
+      variables: {
+        name: {label: 'Name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
         if (!name) throw new Error('You must select a name for the method')
-        const position = buffer.characterIndexForPosition(selection.start)
-        buffer.setTextInRange(selection, '')
+        const position = activeBuffer().characterIndexForPosition(selection.start)
         const j = require('jscodeshift').withParser('babylon')
-        const root = j(buffer.getText())
+        const root = j(text)
         require('./addFindAllAPIMethod')(root, position, name)
-        return {
-          text: root.toSource(),
-        }
+        return {text: root.toSource()}
       },
     },
     {
