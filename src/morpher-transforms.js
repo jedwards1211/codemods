@@ -227,7 +227,7 @@ module.exports = function () {
         if (!name) throw new Error('You must select a name for the component')
         const position = activeBuffer().characterIndexForPosition(selection.start)
         return {
-          selectedText: require('./addInlineMaterialUIFSC')({
+          text: require('./addInlineMaterialUIFSC')({
             code: text,
             file: activeFile(),
             name,
