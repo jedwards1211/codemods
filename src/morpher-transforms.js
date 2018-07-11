@@ -1,7 +1,7 @@
 /* global atom */
 
+const identifierFromFile = require('./identifierFromFile')
 const { TextBuffer } = require("atom")
-const { upperFirst } = require('lodash')
 const pathsToTransformFilter = require('./pathsToTransformFilter')
 
 function processSelected(handler) {
@@ -49,6 +49,33 @@ module.exports = function () {
     if (file !== __filename) delete require.cache[file]
   })
   return [
+    {
+      name: 'replace',
+      description: 'find and replace while preserving case',
+      variables: {
+        find: {label: 'Find'},
+        replace: {label: 'Replace'},
+      },
+      onSelected: ({text, selectedText, variableValues: {find, replace}}) => {
+        const replaceAll = require('preserve-case').all
+        if (selectedText.trim()) return {selectedText: replaceAll(selectedText, find, replace)}
+        return {text: replaceAll(text, find, replace)}
+      }
+    },
+    {
+      name: 'regexp-replace',
+      description: 'find with regexp and replace while preserving case',
+      variables: {
+        find: {label: 'Find'},
+        replace: {label: 'Replace'},
+      },
+      onSelected: ({text, selectedText, variableValues: {find, replace}}) => {
+        find = new RegExp(find)
+        const replaceAll = require('preserve-case').all
+        if (selectedText.trim()) return {selectedText: replaceAll(selectedText, find, replace)}
+        return {text: replaceAll(text, find, replace)}
+      }
+    },
     {
       name: 'convertLambdaToReturn',
       description: "Convert simple lambda functions to block with return statement",
@@ -246,15 +273,51 @@ module.exports = function () {
     {
       name: 'sequelize-model',
       description: 'create a Sequelize model',
-      onSelected: () => ({
-        text: require('./createSequelizeModel')(activeFile()),
+      variables: {
+        name: {
+          label: 'Name',
+          defaultValue: identifierFromFile(activeFile()),
+        },
+        initAttributes: {
+          label: 'InitAttributes (one per line, ending with ;)',
+          defaultValue: '',
+        },
+        attributes: {
+          label: 'Attributes (one per line, ending with ;)',
+          defaultValue: `id: number;
+createdAt: Date;
+updatedAt: Date;`,
+        },
+      },
+      onSelected: ({variableValues}) => ({
+        text: require('./createSequelizeModel')(variableValues),
       })
     },
     {
       name: 'sequelize-join-model',
       description: 'create a Sequelize join model',
-      onSelected: () => ({
-        text: require('./createSequelizeJoinModel')(activeFile()),
+      variables: {
+        name: {
+          label: 'Name',
+          defaultValue: identifierFromFile(activeFile()),
+        },
+        initAttributes: {
+          label: 'InitAttributes (one per line, ending with ;)',
+          defaultValue: '',
+        },
+        throughInitAttributes: {
+          label: 'ThroughInitAttributes (one per line, ending with ;)',
+          defaultValue: '',
+        },
+        attributes: {
+          label: 'Attributes (one per line, ending with ;)',
+          defaultValue: `id: number;
+createdAt: Date;
+updatedAt: Date;`,
+        },
+      },
+      onSelected: ({variableValues}) => ({
+        text: require('./createSequelizeJoinModel')(variableValues),
       })
     },
     {

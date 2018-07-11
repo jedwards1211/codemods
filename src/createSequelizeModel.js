@@ -1,25 +1,19 @@
-const identifierFromFile = require('./identifierFromFile')
-
-function createSequelizeModel(file) {
-  const name = identifierFromFile(file)
+function createSequelizeModel({name, attributes, initAttributes}) {
   return `// @flow
 /* @flow-runtime enable */
 
 import Sequelize, {Model} from 'sequelize'
 
 export type ${name}InitAttributes = {
+${initAttributes.replace(/^/gm, '  ')}
 }
 
 export type ${name}Attributes = {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
+${attributes.replace(/^/gm, '  ')}
 }
 
 export default class ${name} extends Model<${name}Attributes, ${name}InitAttributes> {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
+${attributes.replace(/^/gm, '  ')}
 
   static initAttributes({sequelize}: {sequelize: Sequelize}) {
     super.init({
