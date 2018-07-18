@@ -249,6 +249,18 @@ module.exports = function () {
       }
     },
     {
+      name: 'wrapWithApolloConsumer',
+      description: 'wrap JSX element with ApolloConsumer',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./wrapWithApolloConsumer')(
+          root, pathInRange(text, selection)
+        )
+        return {text: root.toSource()}
+      }
+    },
+    {
       name: 'convertStringPropToTemplate',
       description: 'convert a JSX string prop to a template literal',
       onSelected: ({text, selection}) => {
