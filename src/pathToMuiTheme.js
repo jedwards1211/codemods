@@ -1,9 +1,7 @@
-const path = require('path')
-const findRoot = require('find-root')
+const pathInProject = require('./pathInProject')
 
 function pathToTheme(file) {
-  const theme = path.resolve(findRoot(file), 'src', 'universal', 'theme')
-  return path.relative(path.dirname(file), theme)
+  return pathInProject(file, 'src', 'universal', 'theme')
 }
 
 module.exports = pathToTheme

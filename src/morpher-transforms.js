@@ -283,12 +283,14 @@ module.exports = function () {
         initAttributes: {
           label: 'InitAttributes (one per line, ending with ;)',
           defaultValue: '',
+          multiline: true,
         },
         attributes: {
           label: 'Attributes (one per line, ending with ;)',
           defaultValue: `id: number;
 createdAt: Date;
 updatedAt: Date;`,
+          multiline: true,
         },
       },
       onSelected: ({variableValues}) => ({
@@ -306,21 +308,63 @@ updatedAt: Date;`,
         initAttributes: {
           label: 'InitAttributes (one per line, ending with ;)',
           defaultValue: '',
+          multiline: true,
         },
         throughInitAttributes: {
           label: 'ThroughInitAttributes (one per line, ending with ;)',
           defaultValue: '',
+          multiline: true,
         },
         attributes: {
           label: 'Attributes (one per line, ending with ;)',
           defaultValue: `id: number;
 createdAt: Date;
 updatedAt: Date;`,
+          multiline: true,
         },
       },
       onSelected: ({variableValues}) => ({
         text: require('./createSequelizeJoinModel')(variableValues),
       })
+    },
+    {
+      name: 'apollo-form',
+      description: 'Apollo Form component',
+      variables: {
+        name: {
+          label: 'Component name',
+          defaultValue: identifierFromFile(activeFile()),
+        },
+        component: {
+          label: 'Wrapped Component name',
+          defaultValue: '',
+        },
+        type: {
+          label: 'GraphQL type to edit',
+          defaultValue: '',
+        },
+        values: {
+          label: 'Flow types for field values (one per line, ending with ;)',
+          defaultValue: '',
+          multiline: true,
+        },
+        primaryKeys: {
+          label: 'Flow types for primary key variable(s) (one per line, ending with ;)',
+          defaultValue: '',
+          multiline: true,
+        },
+      },
+      onSelected: ({variableValues}) => {
+        const {values, primaryKeys} = variableValues
+        return {
+          text: require('./createApolloForm')({
+            file: activeFile(),
+            ...variableValues,
+            values: values && require('./parseObjectTypeAnnotation')(values),
+            primaryKeys: primaryKeys && require('./parseObjectTypeAnnotation')(primaryKeys),
+          }),
+        }
+      }
     },
     {
       name: 'ienum',
@@ -469,5 +513,5 @@ updatedAt: Date;`,
         return {text: root.toSource()}
       },
     },
-  ]
+  ];
 }
