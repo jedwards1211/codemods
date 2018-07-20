@@ -99,6 +99,8 @@
     "babylon": "^6.18.0",
     "find-root": "^1.1.0",
     "fs-extra": "^6.0.1",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
     "inflection": "^1.12.0",
     "jscodeshift": "^0.5.1",
     "jscodeshift-imports": "^1.1.0",
@@ -108,6 +110,7 @@
     "lodash.upperfirst": "^4.3.1",
     "promisify-child-process": "^1.0.6",
     "recast": "^0.15.0",
-    "reselect": "^3.0.1"
+    "reselect": "^3.0.1",
+    "superagent": "^3.8.3"
   }
 }
