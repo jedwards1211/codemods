@@ -1,12 +1,9 @@
 // @flow
 
 import {describe, it} from 'mocha'
-import {expect} from 'chai'
 import recast from 'recast'
 
 import graphqlToFlow from '../src/graphqlToFlow'
-
-const server = 'http://localhost:3000/graphql'
 
 describe(`graphqlToFlow`, function () {
   it(`works`, async function (): Promise<void> {
@@ -16,7 +13,12 @@ describe(`graphqlToFlow`, function () {
       multiplier
       offset
     }
-    query ($userGroupId: Int!, $id: Int!) {
+    mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
+      device: createDevice(organizationId: $organizationId, value: $values) {
+        id
+      }
+    }
+    query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChannel!) {
       roles: userGroupRolesInDeviceGroup(userGroupId: $userGroupId, deviceGroupId: $id)
       item: UserGroup(id: $userGroupId) {
         id
@@ -48,8 +50,11 @@ describe(`graphqlToFlow`, function () {
     }
     `
 
-    for (let def of await graphqlToFlow({server, query})) {
-      console.log(recast.print(def).code)
+    for (let def of await graphqlToFlow({
+      schemaFile: require.resolve('./schema.graphql'),
+      query,
+    })) {
+      console.log(recast.print(def).code) // eslint-disable-line no-console
     }
   })
 })

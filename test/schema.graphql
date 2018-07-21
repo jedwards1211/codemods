@@ -1,0 +1,859 @@
+type AddDevicesToDeviceGroupResult {
+  deviceGroupId: Int!
+  deviceIds: [Int!]!
+}
+
+type AddUserGroupsToDeviceGroupResult {
+  deviceGroupId: Int!
+  userGroupIds: [Int!]!
+  roles: JSON!
+}
+
+type AddUserGroupsToDeviceResult {
+  deviceId: Int!
+  userGroupIds: [Int!]!
+  roles: JSON!
+}
+
+type AddUsersToDeviceGroupResult {
+  deviceGroupId: Int!
+  userIds: [Int!]!
+  roles: JSON!
+}
+
+type AddUsersToDeviceResult {
+  deviceId: Int!
+  userIds: [Int!]!
+  roles: JSON!
+}
+
+type AddUsersToOrganizationResult {
+  organizationId: Int!
+  userIds: [Int!]!
+}
+
+type AddUsersToUserGroupResult {
+  userGroupId: Int!
+  userIds: [Int!]!
+}
+
+type ContactPreferences {
+  userId: Int
+  email: String
+  blockInvitations: Boolean!
+}
+
+input CreateCustomDashboard {
+  name: String!
+  config: JSON
+}
+
+input CreateDevice {
+  name: String!
+  type: DeviceType
+}
+
+input CreateDeviceGroup {
+  name: String!
+}
+
+input CreateMQTTDevice {
+  name: String!
+  username: String!
+  password: String!
+  protocol: MQTTProtocol!
+}
+
+input CreateMQTTDeviceChannel {
+  deviceId: Int!
+  channelGroupId: Int!
+  direction: DeviceDirection!
+  tagInDevice: String!
+  MetadataItem: InputMetadataItem
+  mqttTag: String!
+  enabled: Boolean
+  name: String
+  multiplier: Float
+  offset: Float
+}
+
+input CreateOrganization {
+  name: String!
+  displayName: String
+}
+
+input CreateUser {
+  name: String
+  username: String!
+}
+
+input CreateUserGroup {
+  name: String!
+}
+
+type CustomDashboard {
+  id: Int!
+  name: String!
+  config: JSON!
+  readOnly: Boolean!
+}
+
+type CustomDashboardConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [CustomDashboardEdge]
+}
+
+type CustomDashboardEdge {
+  cursor: String!
+  node: CustomDashboard!
+}
+
+enum CustomDashboardsOrderBy {
+  ID
+  NAME
+  CREATED_AT
+  UPDATED_AT
+}
+
+type DestroyDeviceGroupResult {
+  deviceGroupId: Int!
+}
+
+type DestroyDeviceResult {
+  deviceId: Int!
+}
+
+type DestroyDevicesResult {
+  deviceIds: [Int!]!
+}
+
+type DestroyMQTTDeviceChannelsResult {
+  ids: [Int!]!
+}
+
+type DestroyOrganizationResult {
+  organizationId: Int!
+}
+
+type DestroyUserGroupResult {
+  userGroupId: Int!
+}
+
+type DestroyUserResult {
+  userId: Int!
+}
+
+type Device {
+  id: Int!
+  type: DeviceType
+  name: String!
+  Organization: Organization!
+  MQTTDevice: MQTTDevice
+  Users(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrderBy!]): UserConnection!
+  UserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UserGroupsOrderBy!]): UserGroupConnection!
+  DeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DeviceGroupsOrderBy!], excludeAllDevicesGroups: Boolean): DeviceGroupConnection!
+  MetadataFromDevice(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MetadataOrderBy!]): MetadataItemConnection!
+  MetadataToDevice(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MetadataOrderBy!]): MetadataItemConnection!
+}
+
+type DeviceConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [DeviceEdge]
+}
+
+enum DeviceDirection {
+  FROM_DEVICE
+  TO_DEVICE
+}
+
+type DeviceEdge {
+  cursor: String!
+  node: Device!
+}
+
+type DeviceGroup {
+  id: Int!
+  name: String!
+  Organization: Organization!
+  Users(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrderBy!]): UserConnection!
+  UserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UserGroupsOrderBy!]): UserGroupConnection!
+  Devices(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrderBy!]): DeviceConnection!
+}
+
+type DeviceGroupConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [DeviceGroupEdge]
+}
+
+type DeviceGroupEdge {
+  cursor: String!
+  node: DeviceGroup!
+}
+
+enum DeviceGroupsOrderBy {
+  ID
+  NAME
+}
+
+type DeviceOrDeviceGroup {
+  id: Int!
+  name: String!
+  roles: JSON
+  type: DeviceOrDeviceGroupType
+}
+
+type DeviceOrDeviceGroupConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [DeviceOrDeviceGroupEdge]
+}
+
+type DeviceOrDeviceGroupEdge {
+  cursor: String!
+  node: DeviceOrDeviceGroup!
+}
+
+enum DeviceOrDeviceGroupType {
+  Device
+  DeviceGroup
+}
+
+enum DevicesOrderBy {
+  ID
+  NAME
+}
+
+enum DevicesOrDeviceGroupsOrderBy {
+  ID
+  NAME
+}
+
+enum DeviceType {
+  MQTT
+}
+
+input InputMetadataItem {
+  tag: String
+  organizationId: Int
+  tagInOrganization: String
+  name: String!
+  dataType: TagDataType!
+  isDigital: Boolean
+  units: String
+  min: Float
+  max: Float
+  rounding: Float
+  displayPrecision: Int
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type MetadataItem {
+  tag: String!
+  organizationId: Int
+  tagInOrganization: String
+  name: String!
+  dataType: TagDataType!
+  isDigital: Boolean
+  units: String
+  min: Float
+  max: Float
+  displayPrecision: Int
+  rounding: Float
+  TagState: TagState
+  Parent: MetadataItem
+  hasParent: Boolean!
+  Children(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MetadataOrderBy!]): MetadataItemConnection!
+  hasAnyChildren: Boolean!
+  Organization: Organization
+}
+
+type MetadataItemConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [MetadataItemEdge]
+}
+
+type MetadataItemEdge {
+  cursor: String!
+  node: MetadataItem!
+}
+
+enum MetadataOrderBy {
+  TAG
+}
+
+type MQTTDevice {
+  id: Int!
+  name: String!
+  organizationId: Int!
+  username: String!
+  password: String!
+  protocol: MQTTProtocol!
+  Device: Device
+  ChannelsFromMQTT(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MQTTDeviceChannelsOrderBy!]): MQTTDeviceChannelConnection!
+  ChannelsToMQTT(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MQTTDeviceChannelsOrderBy!]): MQTTDeviceChannelConnection!
+  ChannelGroups: [MQTTDeviceChannelGroup!]!
+}
+
+type MQTTDeviceChannel {
+  id: Int!
+  deviceId: Int!
+  channelGroupId: Int!
+  direction: DeviceDirection!
+  type: DeviceType!
+  tag: String!
+  tagInDevice: String!
+  mqttTag: String!
+  enabled: Boolean!
+  name: String
+  multiplier: Float
+  offset: Float
+  MQTTDevice: MQTTDevice!
+  MetadataItem: MetadataItem!
+  TagPrefixes: MQTTDeviceChannelGroupTagPrefix!
+}
+
+type MQTTDeviceChannelConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [MQTTDeviceChannelEdge]
+}
+
+type MQTTDeviceChannelEdge {
+  cursor: String!
+  node: MQTTDeviceChannel!
+}
+
+type MQTTDeviceChannelGroup {
+  id: Int!
+  deviceId: Int!
+  direction: DeviceDirection!
+  automaticallyDetectAndAddTags: Boolean!
+  importUnitsAndRange: Boolean!
+  prefixTagsWith: MQTTDevicePrefixTagsWithOption
+  customPrefix: String
+  minPublishIntervalEnabled: Boolean!
+  minPublishInterval: Int
+  resendIntervalEnabled: Boolean!
+  resendIntervalValue: Int
+  resendIntervalUnit: MQTTDeviceTimeUnit
+  MQTTDevice: MQTTDevice!
+  Channels(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MQTTDeviceChannelsOrderBy!]): MQTTDeviceChannelConnection!
+  TagPrefixes: MQTTDeviceChannelGroupTagPrefix!
+}
+
+type MQTTDeviceChannelGroupConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [MQTTDeviceChannelGroupEdge]
+}
+
+type MQTTDeviceChannelGroupEdge {
+  cursor: String!
+  node: MQTTDeviceChannelGroup!
+}
+
+enum MQTTDeviceChannelGroupsOrderBy {
+  ID
+  DEVICE_ID
+  DIRECTION
+}
+
+type MQTTDeviceChannelGroupTagPrefix {
+  id: Int!
+  organizationTagPrefix: String!
+  deviceTagPrefix: String!
+}
+
+enum MQTTDeviceChannelsOrderBy {
+  ID
+  DEVICE_ID
+  CHANNEL_GROUP_ID
+  DIRECTION
+  TAG
+  TAG_IN_DEVICE
+  MQTT_TAG
+  ENABLED
+  NAME
+}
+
+type MQTTDeviceConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [MQTTDeviceEdge]
+}
+
+type MQTTDeviceEdge {
+  cursor: String!
+  node: MQTTDevice!
+}
+
+enum MQTTDevicePrefixTagsWithOption {
+  NOTHING
+  DEVICE_NAME
+  CUSTOM_PREFIX
+}
+
+enum MQTTDevicesOrderBy {
+  ID
+}
+
+enum MQTTDeviceTimeUnit {
+  MILLISECONDS
+  SECONDS
+  MINUTES
+  HOURS
+}
+
+enum MQTTProtocol {
+  SPARKPLUG
+  JSON
+}
+
+type Mutation {
+  updateContactPreferences(userId: Int, token: String, values: UpdateContactPreferences): ContactPreferences
+  createCustomDashboard(organizationId: Int!, values: CreateCustomDashboard!): CustomDashboard!
+  updateCustomDashboard(id: Int!, values: UpdateCustomDashboard!): CustomDashboard!
+  destroyCustomDashboard(id: Int!): Boolean
+  createDevice(organizationId: Int!, values: CreateDevice!): Device!
+  updateDevice(id: Int!, values: UpdateDevice!): Device!
+  destroyDevice(id: Int!): DestroyDeviceResult!
+  destroyDevices(deviceIds: [Int!]!): DestroyDevicesResult!
+  addUsersToDevice(deviceId: Int!, userIds: [Int!]!, roles: JSON): AddUsersToDeviceResult!
+  setUsersRolesInDevice(deviceId: Int!, userIds: [Int!]!, roles: JSON!): SetUsersRolesInDeviceResult!
+  setUserRolesInDevice(deviceId: Int!, userId: Int!, roles: JSON!): SetUserRolesInDeviceResult!
+  removeUsersFromDevice(deviceId: Int!, userIds: [Int!]!): RemoveUsersFromDeviceResult!
+  addUserGroupsToDevice(deviceId: Int!, userGroupIds: [Int!]!, roles: JSON): AddUserGroupsToDeviceResult!
+  setUserGroupsRolesInDevice(deviceId: Int!, userGroupIds: [Int!]!, roles: JSON!): SetUserGroupsRolesInDeviceResult!
+  setUserGroupRolesInDevice(deviceId: Int!, userGroupId: Int!, roles: JSON!): SetUserGroupRolesInDeviceResult!
+  removeUserGroupsFromDevice(deviceId: Int!, userGroupIds: [Int!]!): RemoveUserGroupsFromDeviceResult!
+  createDeviceGroup(organizationId: Int!, values: CreateDeviceGroup!): DeviceGroup!
+  updateDeviceGroup(id: Int!, values: UpdateDeviceGroup!): DeviceGroup!
+  destroyDeviceGroup(id: Int!): DestroyDeviceGroupResult!
+  addUsersToDeviceGroup(deviceGroupId: Int!, userIds: [Int!]!, roles: JSON): AddUsersToDeviceGroupResult!
+  setUsersRolesInDeviceGroup(deviceGroupId: Int!, userIds: [Int!]!, roles: JSON!): SetUsersRolesInDeviceGroupResult!
+  setUserRolesInDeviceGroup(deviceGroupId: Int!, userId: Int!, roles: JSON!): SetUserRolesInDeviceGroupResult!
+  removeUsersFromDeviceGroup(deviceGroupId: Int!, userIds: [Int!]!): RemoveUsersFromDeviceGroupResult!
+  addUserGroupsToDeviceGroup(deviceGroupId: Int!, userGroupIds: [Int!]!, roles: JSON): AddUserGroupsToDeviceGroupResult!
+  setUserGroupsRolesInDeviceGroup(deviceGroupId: Int!, userGroupIds: [Int!]!, roles: JSON!): SetUserGroupsRolesInDeviceGroupResult!
+  setUserGroupRolesInDeviceGroup(deviceGroupId: Int!, userGroupId: Int!, roles: JSON!): SetUserGroupRolesInDeviceGroupResult!
+  removeUserGroupsFromDeviceGroup(deviceGroupId: Int!, userGroupIds: [Int!]!): RemoveUserGroupsFromDeviceGroupResult!
+  addDevicesToDeviceGroup(deviceGroupId: Int!, deviceIds: [Int!]!): AddDevicesToDeviceGroupResult!
+  setDevicesInDeviceGroup(deviceGroupId: Int!, deviceIds: [Int!]!): SetDevicesInDeviceGroupResult!
+  removeDevicesFromDeviceGroup(deviceGroupId: Int!, deviceIds: [Int!]!): RemoveDevicesFromDeviceGroupResult!
+  createMetadataItem(values: InputMetadataItem!): MetadataItem!
+  updateMetadataItem(tag: String, organizationId: Int, tagInOrganization: String, values: InputMetadataItem!): MetadataItem!
+  upsertMetadataItem(values: InputMetadataItem!): MetadataItem!
+  createMQTTDevice(organizationId: Int!, values: CreateMQTTDevice!): MQTTDevice!
+  updateMQTTDevice(id: Int!, values: UpdateMQTTDevice!): MQTTDevice!
+  createMQTTDeviceChannel(values: CreateMQTTDeviceChannel!): MQTTDeviceChannel!
+  updateMQTTDeviceChannel(id: Int!, values: UpdateMQTTDeviceChannel!): MQTTDeviceChannel!
+  destroyMQTTDeviceChannels(ids: [Int!]!): DestroyMQTTDeviceChannelsResult!
+  createOrganization(values: CreateOrganization!): Organization!
+  updateOrganization(id: Int!, values: UpdateOrganization!): Organization!
+  destroyOrganization(id: Int!): DestroyOrganizationResult!
+  addUsersToOrganization(organizationId: Int!, userIds: [Int!]!, role: RoleInOrganization!): AddUsersToOrganizationResult!
+  setUsersRoleInOrganization(organizationId: Int!, userIds: [Int!]!, role: RoleInOrganization!): SetUsersRoleInOrganizationResult!
+  removeUsersFromOrganization(organizationId: Int!, userIds: [Int!]!): RemoveUsersFromOrganizationResult!
+  createUser(values: CreateUser!, organizationId: Int, role: RoleInOrganization): User!
+  updateUser(id: Int!, values: UpdateUser!): User!
+  destroyUser(id: Int!): DestroyUserResult!
+  createUserGroup(organizationId: Int!, values: CreateUserGroup!): UserGroup!
+  updateUserGroup(id: Int!, values: UpdateUserGroup!): UserGroup!
+  destroyUserGroup(id: Int!): DestroyUserGroupResult!
+  addUsersToUserGroup(userGroupId: Int!, userIds: [Int!]!): AddUsersToUserGroupResult!
+  setUserGroupMembers(userGroupId: Int!, userIds: [Int!]!): SetUserGroupMembersResult!
+  removeUsersFromUserGroup(userGroupId: Int!, userIds: [Int!]!): RemoveUsersFromUserGroupResult!
+}
+
+type Organization {
+  id: Int!
+  name: String!
+  displayName: String
+  userRole: RoleInOrganization
+  Users(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrderBy!]): UserConnection!
+  UserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UserGroupsOrderBy!]): UserGroupConnection!
+  AllUsersGroup: UserGroup!
+  Devices(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrderBy!]): DeviceConnection!
+  DeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DeviceGroupsOrderBy!]): DeviceGroupConnection!
+  AllDevicesGroup: DeviceGroup!
+  Metadata(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MetadataOrderBy!]): MetadataItemConnection!
+}
+
+type OrganizationConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [OrganizationEdge]
+}
+
+type OrganizationEdge {
+  cursor: String!
+  node: Organization!
+}
+
+enum OrganizationsOrderBy {
+  ID
+  NAME
+  DISPLAY_NAME
+  CREATED_AT
+  UPDATED_AT
+}
+
+type PageInfo {
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Query {
+  ContactPreferences(userId: Int, token: String): ContactPreferences
+  CustomDashboard(id: Int!): CustomDashboard
+  CustomDashboards(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [CustomDashboardsOrderBy!], organizationId: Int): CustomDashboardConnection!
+  Device(id: Int!): Device
+  Devices(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrderBy!], organizationId: Int, userId: Int, userGroupId: Int, deviceGroupId: Int, search: String, mqttDevicesOnly: Boolean): DeviceConnection
+  userRolesInDevice(userId: Int!, deviceId: Int!): JSON!
+  userGroupRolesInDevice(userGroupId: Int!, deviceId: Int!): JSON!
+  DeviceGroup(id: Int!): DeviceGroup
+  DeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DeviceGroupsOrderBy!], organizationId: Int, userId: Int, userGroupId: Int, deviceId: Int, excludeAllDevicesGroups: Boolean, search: String): DeviceGroupConnection
+  userRolesInDeviceGroup(userId: Int!, deviceGroupId: Int!): JSON!
+  userGroupRolesInDeviceGroup(userGroupId: Int!, deviceGroupId: Int!): JSON!
+  DevicesOrDeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrDeviceGroupsOrderBy!], organizationId: Int!, userId: Int, userGroupId: Int, search: String): DeviceOrDeviceGroupConnection
+  MetadataItem(tag: String, organizationId: Int, tagInOrganization: String): MetadataItem
+  Metadata(tags: [String!], roots: Boolean, organizationId: Int, deviceId: Int, first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [MetadataOrderBy!]): MetadataItemConnection!
+  MQTTDevice(id: Int!): MQTTDevice
+  MQTTDeviceChannel(id: Int!): MQTTDeviceChannel
+  MQTTDeviceChannelGroup(id: Int!): MQTTDeviceChannelGroup
+  Organization(id: Int!): Organization
+  Organizations(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [OrganizationsOrderBy!], search: String): OrganizationConnection!
+  TagState(tag: String!): TagState
+  currentUser: User
+  User(id: Int!): User
+  Users(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrderBy!], organizationId: Int, userGroupId: Int, deviceGroupId: Int, deviceId: Int, search: String): UserConnection
+  UserGroup(id: Int!): UserGroup
+  UserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UserGroupsOrderBy!], organizationId: Int, userId: Int, deviceGroupId: Int, deviceId: Int, excludeAllUsersGroups: Boolean, search: String): UserGroupConnection
+  UsersOrUserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrUserGroupsOrderBy!], organizationId: Int!, deviceId: Int, deviceGroupId: Int, search: String): UserOrUserGroupConnection
+}
+
+type RemoveDevicesFromDeviceGroupResult {
+  deviceGroupId: Int!
+  deviceIds: [Int!]!
+}
+
+type RemoveUserGroupsFromDeviceGroupResult {
+  deviceGroupId: Int!
+  userGroupIds: [Int!]!
+}
+
+type RemoveUserGroupsFromDeviceResult {
+  deviceId: Int!
+  userGroupIds: [Int!]!
+}
+
+type RemoveUsersFromDeviceGroupResult {
+  deviceGroupId: Int!
+  userIds: [Int!]!
+}
+
+type RemoveUsersFromDeviceResult {
+  deviceId: Int!
+  userIds: [Int!]!
+}
+
+type RemoveUsersFromOrganizationResult {
+  organizationId: Int!
+  userIds: [Int!]!
+}
+
+type RemoveUsersFromUserGroupResult {
+  userGroupId: Int!
+  userIds: [Int!]!
+}
+
+enum RoleInOrganization {
+  owner
+  admin
+  member
+}
+
+type SetDevicesInDeviceGroupResult {
+  deviceGroupId: Int!
+  deviceIds: [Int!]!
+}
+
+type SetUserGroupMembersResult {
+  userGroupId: Int!
+  userIds: [Int!]!
+}
+
+type SetUserGroupRolesInDeviceGroupResult {
+  deviceGroupId: Int!
+  userGroupId: Int!
+  roles: JSON!
+}
+
+type SetUserGroupRolesInDeviceResult {
+  deviceId: Int!
+  userGroupId: Int!
+  roles: JSON!
+}
+
+type SetUserGroupsRolesInDeviceGroupResult {
+  deviceGroupId: Int!
+  userGroupIds: [Int!]!
+  roles: JSON!
+}
+
+type SetUserGroupsRolesInDeviceResult {
+  deviceId: Int!
+  userGroupIds: [Int!]!
+  roles: JSON!
+}
+
+type SetUserRolesInDeviceGroupResult {
+  deviceGroupId: Int!
+  userId: Int!
+  roles: JSON!
+}
+
+type SetUserRolesInDeviceResult {
+  deviceId: Int!
+  userId: Int!
+  roles: JSON!
+}
+
+type SetUsersRoleInOrganizationResult {
+  organizationId: Int!
+  userIds: [Int!]!
+  role: RoleInOrganization!
+}
+
+type SetUsersRolesInDeviceGroupResult {
+  deviceGroupId: Int!
+  userIds: [Int!]!
+  roles: JSON!
+}
+
+type SetUsersRolesInDeviceResult {
+  deviceId: Int!
+  userIds: [Int!]!
+  roles: JSON!
+}
+
+type Subscription {
+  HistoricalDataPage(request: TimeSeriesDataPageSubRequest!): TimeSeriesDataPageSubMessage!
+  Metadata(tags: [String!]): MetadataItem
+  TagState(tags: [String!]!): TagState
+}
+
+enum TagDataType {
+  number
+  string
+  group
+}
+
+type TagState {
+  tag: String!
+  t: Float!
+  v: JSON
+}
+
+type TimeSeriesDataArrays {
+  t: JSON!
+  v: JSON
+  min: JSON
+  max: JSON
+}
+
+type TimeSeriesDataPage {
+  t: JSON!
+  v: JSON
+  min: JSON
+  max: JSON
+  modCount: Int
+}
+
+type TimeSeriesDataPageSubData {
+  t: JSON!
+  v: JSON
+  min: JSON
+  max: JSON
+  modCount: Int
+  pageSize: Float!
+  channelId: String!
+  clear: Boolean
+  beginTime: Float
+  endTime: Float
+}
+
+type TimeSeriesDataPageSubMessage {
+  data: TimeSeriesDataPageSubData
+  ready: Boolean
+  error: String
+}
+
+input TimeSeriesDataPageSubRequest {
+  channelId: String!
+  pageSize: Float!
+  timestamp: Float!
+  modCount: Int
+}
+
+input UpdateContactPreferences {
+  blockInvitations: Boolean
+}
+
+input UpdateCustomDashboard {
+  name: String
+  config: JSON
+}
+
+input UpdateDevice {
+  name: String
+}
+
+input UpdateDeviceGroup {
+  name: String
+}
+
+input UpdateMQTTDevice {
+  name: String
+  username: String
+  password: String
+  protocol: MQTTProtocol
+  ChannelGroups: [UpsertMQTTDeviceChannelGroup!]
+}
+
+input UpdateMQTTDeviceChannel {
+  MetadataItem: InputMetadataItem
+  tagInDevice: String
+  mqttTag: String
+  enabled: Boolean
+  name: String
+  multiplier: Float
+  offset: Float
+}
+
+input UpdateOrganization {
+  name: String
+  displayName: String
+}
+
+input UpdateUser {
+  name: String
+  username: String
+}
+
+input UpdateUserGroup {
+  name: String
+}
+
+input UpsertMQTTDeviceChannelGroup {
+  id: Int
+  deviceId: Int!
+  direction: DeviceDirection!
+  automaticallyDetectAndAddTags: Boolean!
+  importUnitsAndRange: Boolean!
+  prefixTagsWith: MQTTDevicePrefixTagsWithOption
+  customPrefix: String
+  minPublishIntervalEnabled: Boolean!
+  minPublishInterval: Int
+  resendIntervalEnabled: Boolean!
+  resendIntervalValue: Int
+  resendIntervalUnit: MQTTDeviceTimeUnit
+}
+
+type User {
+  id: Int!
+  name: String
+  username: String
+  roleInOrganization(organizationId: Int): RoleInOrganization
+  rolesInDevice(deviceId: Int): JSON
+  rolesInDeviceGroup(deviceGroupId: Int): JSON
+  roles: JSON!
+  Organizations(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [OrganizationsOrderBy!]): OrganizationConnection!
+  UserGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UserGroupsOrderBy!], organizationId: Int, excludeAllUsersGroups: Boolean): UserGroupConnection!
+  DeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DeviceGroupsOrderBy!], organizationId: Int): DeviceGroupConnection!
+  Devices(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrderBy!], organizationId: Int): DeviceConnection!
+}
+
+type UserConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [UserEdge]
+}
+
+type UserEdge {
+  cursor: String!
+  node: User!
+}
+
+type UserGroup {
+  id: Int!
+  name: String!
+  Organization: Organization!
+  rolesInDevice(deviceId: Int): JSON
+  rolesInDeviceGroup(deviceGroupId: Int): JSON
+  Users(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [UsersOrderBy!]): UserConnection!
+  DeviceGroups(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DeviceGroupsOrderBy!]): DeviceGroupConnection!
+  Devices(first: Int, last: Int, before: String, after: String, offset: Int, orderBy: [DevicesOrderBy!]): DeviceConnection!
+}
+
+type UserGroupConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [UserGroupEdge]
+}
+
+type UserGroupEdge {
+  cursor: String!
+  node: UserGroup!
+}
+
+enum UserGroupsOrderBy {
+  ID
+  NAME
+}
+
+type UserOrUserGroup {
+  id: Int!
+  name: String
+  username: String
+  roles: JSON
+  type: UserOrUserGroupType
+}
+
+type UserOrUserGroupConnection {
+  pageInfo: PageInfo!
+  fullCount: Int
+  edges: [UserOrUserGroupEdge]
+}
+
+type UserOrUserGroupEdge {
+  cursor: String!
+  node: UserOrUserGroup!
+}
+
+enum UserOrUserGroupType {
+  User
+  UserGroup
+}
+
+enum UsersOrderBy {
+  ID
+  NAME
+  USERNAME
+}
+
+enum UsersOrUserGroupsOrderBy {
+  ID
+  NAME
+  USERNAME
+}
