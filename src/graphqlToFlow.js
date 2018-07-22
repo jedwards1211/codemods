@@ -1,4 +1,4 @@
-const j = require('jscodeshift')
+const j = require('jscodeshift').withParser('babylon')
 const graphql = require('graphql')
 const getSchemaTypes = require('./getSchemaTypes')
 const map = require('lodash/map')
@@ -7,6 +7,8 @@ const fs = require('fs-extra')
 
 const schemaCache = new Map()
 const schemaFileTimestamps = new Map()
+
+const {statement} = j.template
 
 async function loadSchema(file) {
   const timestamp = schemaFileTimestamps.get(file)
@@ -67,6 +69,11 @@ module.exports = async function graphqlToFlow({
       `${name}Data`,
       convertSelectionSet(selectionSet, types[upperFirst(operation)])
     )
+    if (operation === 'mutation') {
+      result.push(statement([`type ${name}Mutate = (options: {
+  variables: ${name}Variables,
+}) => Promise<${name}Data>`]))
+    }
   }
 
   function convertVariableDefinitions(variableDefinitions) {

@@ -513,5 +513,26 @@ updatedAt: Date;`,
         return {text: root.toSource()}
       },
     },
-  ];
+    {
+      name: 'add-graphql-flow-types',
+      description: 'add generated flow types for GraphQL queries',
+      variables: {
+        schemaFile: {label: 'Schema File (relative to project root)'},
+        server: {label: 'GraphQL Server URL'},
+      },
+      onSelected: async ({text, variableValues}) => {
+        let {schemaFile, server} = variableValues
+        if (schemaFile) {
+          schemaFile = require('path').resolve(require('find-root')(activeFile()), schemaFile)
+        }
+        const root = require('jscodeshift').withParser('babylon')(text)
+        await require('./addGraphQLFlowTypes')({
+          root,
+          schemaFile,
+          server,
+        })
+        return {text: root.toSource()}
+      },
+    },
+  ]
 }
