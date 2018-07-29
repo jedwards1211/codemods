@@ -18,12 +18,15 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
 
   const componentName = componentDeclarator.nodes()[0].id.name
 
-  const variableDeclaration = componentDeclarator.closest(j.VariableDeclaration)
-  variableDeclaration.insertBefore(
+  let declaration = componentDeclarator.nodes()[0].type === 'ClassDeclaration'
+    ? componentDeclarator
+    : componentDeclarator.closest(j.VariableDeclaration)
+
+  declaration.insertBefore(
     `const ${lowerFirst(componentName)}Styles = (theme: ${Theme}) => ({
 })`
   )
-  variableDeclaration.insertBefore(
+  declaration.insertBefore(
     `const ${componentName}Styles = ${createStyled}(${lowerFirst(componentName)}Styles, {name: '${componentName}'})`
   )
 
