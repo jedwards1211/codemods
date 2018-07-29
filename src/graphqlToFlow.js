@@ -28,12 +28,18 @@ async function loadSchema(file) {
 
 module.exports = async function graphqlToFlow({
   query,
+  file,
   schema,
   schemaFile,
   server,
   exploded,
+  ApolloQueryResult = 'ApolloQueryResult',
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
+
+  const strippedFileName = file
+    ? require('path').basename(file).replace(/\..+$/, '')
+    : null
 
   const document = typeof query === 'string'
     ? query = graphql.parse(query)
@@ -58,7 +64,13 @@ module.exports = async function graphqlToFlow({
 
   function convertOperationDefinition(def) {
     const {operation, selectionSet, variableDefinitions} = def
-    const name = def.name ? def.name.value : `Unnamed${upperFirst(operation)}`
+    let name = def.name ? upperFirst(def.name.value) : `Unnamed`
+    if (strippedFileName && name.toLowerCase().startsWith(strippedFileName.toLowerCase())) {
+      name = name.substring(strippedFileName.length)
+    }
+    if (name.toLowerCase().lastIndexOf(operation) < 0) {
+      name += upperFirst(operation)
+    }
     if (variableDefinitions && variableDefinitions.length) {
       addObjectTypeAlias(
         `${name}Variables`,
@@ -70,9 +82,9 @@ module.exports = async function graphqlToFlow({
       convertSelectionSet(selectionSet, types[upperFirst(operation)])
     )
     if (operation === 'mutation') {
-      result.push(statement([`type ${name}Mutate = (options: {
+      result.push(statement([`type Perform${name} = (options: {
   variables: ${name}Variables,
-}) => Promise<${name}Data>`]))
+}) => Promise<${ApolloQueryResult}<${name}Data>>`]))
     }
   }
 
@@ -160,14 +172,19 @@ module.exports = async function graphqlToFlow({
     return alias
   }
 
+  function getInnerType(type) {
+    let innerType = type
+    while (innerType.ofType) innerType = innerType.ofType
+    return innerType
+  }
+
   function convertField(field, type) {
     let {name, alias, selectionSet} = field
     let typeValue
     if (name.value === '__typename') typeValue = j.stringTypeAnnotation()
     else if (selectionSet) {
-      const fieldType = type.fields[name.value].type
-      let innerType = fieldType
-      while (innerType.ofType) innerType = innerType.ofType
+      const innerType = getInnerType(type)
+      const fieldType = innerType.fields[name.value].type
       if (exploded) {
         addObjectTypeAlias(`${innerType.name}Data`, convertSelectionSet(selectionSet, innerType))
         typeValue = convertType(fieldType)
@@ -175,7 +192,8 @@ module.exports = async function graphqlToFlow({
         typeValue = convertType(fieldType, selectionSet)
       }
     } else {
-      typeValue = convertType(type.fields[name.value].type)
+      const innerType = getInnerType(type)
+      typeValue = convertType(innerType.fields[name.value].type)
     }
     return j.objectTypeProperty(
       j.identifier((alias || name).value),

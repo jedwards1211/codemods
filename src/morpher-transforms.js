@@ -27,6 +27,7 @@ function activeFile() {
   return activeBuffer().file.path
 }
 
+
 module.exports = function () {
   const path = require('path')
   const modules = require('fs').readdirSync(__dirname)
@@ -525,11 +526,46 @@ updatedAt: Date;`,
         if (schemaFile) {
           schemaFile = require('path').resolve(require('find-root')(activeFile()), schemaFile)
         }
-        const root = require('jscodeshift').withParser('babylon')(text)
-        await require('./addGraphQLFlowTypes')({
-          root,
+        const root = await require('./addGraphQLFlowTypes')({
+          file: activeFile(),
           schemaFile,
           server,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'wrapWithChildFunctionComponent',
+      description: 'wrap JSX Element with child function component',
+      variables: {
+        name: {label: 'Wrapper Component Name'},
+        props: {label: 'child function arguments'},
+      },
+      onSelected: ({text, selection, variableValues: {name, props}}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./wrapWithChildFunctionComponent')({
+          root,
+          filter: pathInRange(text, selection),
+          name,
+          props,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'wrapWithJSXElement',
+      description: 'wrap JSX Element with another element',
+      variables: {
+        name: {label: 'Wrapper Component Name'},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./wrapWithJSXElement')({
+          root,
+          filter: pathInRange(text, selection),
+          name,
         })
         return {text: root.toSource()}
       },
