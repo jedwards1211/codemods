@@ -238,6 +238,22 @@ module.exports = function () {
       }
     },
     {
+      name: 'apollo-fsc',
+      description: 'create apollo query functional stateless component',
+      variables: {
+        name: {label: 'component name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: ({text, selection, variableValues: {name}}) => {
+        if (!name) throw new Error('You must select a name for the component')
+        return {
+          text: require('./createApolloContainer')({
+            file: activeFile(),
+            name,
+          })
+        }
+      }
+    },
+    {
       name: 'addStylesToComponent',
       description: 'add Material UI styles to a component',
       onSelected: ({text, selection}) => {
