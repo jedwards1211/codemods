@@ -1,5 +1,6 @@
 const j = require('jscodeshift').withParser('babylon')
 const recast = require('recast')
+const isChildJSXElement = require('./isChildJSXElement')
 
 module.exports = function wrapWithJSXElement({
   root,
@@ -8,9 +9,15 @@ module.exports = function wrapWithJSXElement({
 }) {
   const element = root.find(j.JSXElement).filter(filter).at(0)
 
-  element.replaceWith(path => {
-    return `<${name}>
+  if (isChildJSXElement(element.paths()[0])) {
+    element.replaceWith(path => `<${name}>
 ${recast.print(path.node).toString().replace(/^/gm, '  ')}
-</${name}>`
-  })
+</${name}>`)
+  } else {
+    element.replaceWith(path => `(
+  <${name}>
+${recast.print(path.node).toString().replace(/^/gm, '    ')}
+  </${name}>
+)`)
+  }
 }

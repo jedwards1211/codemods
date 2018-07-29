@@ -570,5 +570,18 @@ updatedAt: Date;`,
         return {text: root.toSource()}
       },
     },
+    {
+      name: 'unwrapJSXElement',
+      description: 'replace a JSX Element with its children',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./unwrapJSXElement')({
+          root,
+          filter: pathInRange(text, selection),
+        })
+        return {text: root.toSource()}
+      },
+    }
   ]
 }
