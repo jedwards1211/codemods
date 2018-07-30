@@ -1,23 +1,31 @@
 const j = require('jscodeshift').withParser('babylon')
 const recast = require('recast')
 const isChildJSXElement = require('./isChildJSXElement')
+const groupByParent = require('./groupByParent')
 
 module.exports = function wrapWithJSXElement({
   root,
   filter = () => true,
   name,
 }) {
-  const element = root.find(j.JSXElement).filter(filter).at(0)
+  const elements = root.find(j.JSXElement).filter(filter)
 
-  if (isChildJSXElement(element.paths()[0])) {
-    element.replaceWith(path => `<${name}>
-${recast.print(path.node).toString().replace(/^/gm, '  ')}
+  for (let group of groupByParent(elements)) {
+    if (isChildJSXElement(group[0])) {
+      j(group[0]).replaceWith(path => `<${name}>
+${group.map(path => recast.print(path.node).toString().replace(/^/gm, '  ')).join('\n')}
 </${name}>`)
-  } else {
-    element.replaceWith(path => `(
+    } else {
+      j(group[0]).replaceWith(path => `(
   <${name}>
-${recast.print(path.node).toString().replace(/^/gm, '    ')}
+${group.map(path => recast.print(path.node).toString().replace(/^/gm, '    ')).join('\n')}
   </${name}>
 )`)
+    }
+    for (let i = 1, end = group.length; i < end; i++) {
+      j(group[i]).remove()
+    }
   }
+
+  return root
 }
