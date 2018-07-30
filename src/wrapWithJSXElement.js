@@ -8,17 +8,23 @@ module.exports = function wrapWithJSXElement({
   filter = () => true,
   name,
 }) {
-  const elements = root.find(j.JSXElement).filter(filter)
+  const elements = root.find(j.Node).filter(path => (
+    path.node.type !== 'JSXOpeningElement' &&
+    path.node.type !== 'JSXClosingElement' &&
+    (path.node.type === 'JSXElement' ||
+    (path.parent && path.parent.node.type === 'JSXElement'))
+  )).filter(filter)
 
   for (let group of groupByParent(elements)) {
     if (isChildJSXElement(group[0])) {
-      j(group[0]).replaceWith(path => `<${name}>
-${group.map(path => recast.print(path.node).toString().replace(/^/gm, '  ')).join('\n')}
-</${name}>`)
+      j(group[0]).replaceWith(`<${name}>
+  ${group.map(path => recast.print(path.node).toString()).join('').trim()}
+</${name}>
+`)
     } else {
-      j(group[0]).replaceWith(path => `(
+      j(group[0]).replaceWith(`(
   <${name}>
-${group.map(path => recast.print(path.node).toString().replace(/^/gm, '    ')).join('\n')}
+${group.map(path => recast.print(path.node).toString()).join('').trim().replace(/^/gm, '    ')}
   </${name}>
 )`)
     }
