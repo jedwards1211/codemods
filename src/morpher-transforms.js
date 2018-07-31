@@ -598,6 +598,19 @@ updatedAt: Date;`,
         })
         return {text: root.toSource()}
       },
-    }
+    },
+    {
+      name: 'wrapWithTryCatch',
+      description: 'wrap selected statements with try/catch block',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./wrapWithTryCatch')({
+          root,
+          filter: pathInRange(text, selection),
+        })
+        return {text: root.toSource()}
+      },
+    },
   ]
 }
