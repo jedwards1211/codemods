@@ -1,14 +1,15 @@
 const pathInProject = require('./pathInProject')
 
 function createApolloContainer({name, file}) {
+  const queryBoilerplatePath = pathInProject(file, 'src', 'universal', 'components', 'queryBoilerplate')
+
   return `// @flow
 
 import * as React from 'react'
 import gql from 'graphql-tag'
-// $FlowFixMe
 import {Query} from 'react-apollo'
-import type {ApolloQueryResult} from 'react-apollo'
-import queryBoilerplate from '${pathInProject(file, 'src', 'universal', 'components', 'queryBoilerplate')}'
+import queryBoilerplate from '${queryBoilerplatePath}'
+import type {DefinedRenderProps} from '${queryBoilerplatePath}'
 
 const query = gql\`
 query ${name} {
@@ -29,7 +30,7 @@ const ${name} = (props: Props) => (
     query={query}
     errorPolicy="all"
   >
-    {queryBoilerplate(({loading, data}: ApolloQueryResult<QueryData>) => (
+    {queryBoilerplate({loading, data}: DefinedRenderProps<QueryData>) => (
 
     ))}
   </Query>

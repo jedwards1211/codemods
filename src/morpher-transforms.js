@@ -243,12 +243,29 @@ module.exports = function () {
       variables: {
         name: {label: 'component name', defaultValue: identifierFromFile(activeFile())},
       },
-      onSelected: ({text, selection, variableValues: {name}}) => {
+      onSelected: ({text, variableValues: {name}}) => {
         if (!name) throw new Error('You must select a name for the component')
         return {
           text: require('./createApolloContainer')({
             file: activeFile(),
             name,
+          })
+        }
+      }
+    },
+    {
+      name: 'apollo-ifsc',
+      description: 'create inline apollo query functional stateless component',
+      variables: {
+        name: {label: 'component name', defaultValue: identifierFromFile(activeFile())},
+      },
+      onSelected: async ({text, selection, variableValues: {name}}) => {
+        if (!name) throw new Error('You must select a name for the component')
+        return {
+          text: await require('./createInlineApolloContainer')({
+            file: activeFile(),
+            name,
+            position: activeBuffer().characterIndexForPosition(selection.start),
           })
         }
       }
