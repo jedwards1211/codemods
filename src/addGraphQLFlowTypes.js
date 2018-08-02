@@ -10,11 +10,15 @@ const {expression, statement} = j.template
 
 const AUTO_GENERATED_COMMENT = ' auto-generated from GraphQL'
 
-module.exports = async function addGraphQLFlowTypes({file, schema, schemaFile, server}) {
-  const code = await fs.readFile(file, 'utf8')
+module.exports = async function addGraphQLFlowTypes(options) {
+  const {file, schema, schemaFile, server} = options
+  const code = options.code || await fs.readFile(file, 'utf8')
   const root = j(code)
   const {gql} = findImports(root, statement`import gql from 'graphql-tag'`)
-  const {ApolloQueryResult} = addImports(root, statement`import type {ApolloQueryResult} from 'react-apollo'`)
+  const {ApolloQueryResult} = addImports(
+    root,
+    statement`import type {ApolloQueryResult, QueryRenderProps} from 'react-apollo'`
+  )
 
   const findQueryPaths = root => [...root.find(j.TaggedTemplateExpression, {tag: {name: gql}}).paths()]
     .filter(path => j(path).closest(j.VariableDeclarator).size())
@@ -34,11 +38,12 @@ module.exports = async function addGraphQLFlowTypes({file, schema, schemaFile, s
   }
 
   let queries
-  const tempFile = file.replace(/\.js$/, '_TEMP.js')
-  let tempFileWritten = false
 
-  try {
-    if (evalNeeded) {
+  if (evalNeeded) {
+    const tempFile = file.replace(/\.js$/, '_TEMP.js')
+    let tempFileWritten = false
+    let stdout
+    try {
       const tempRoot = j(code)
       const properties = []
       const {body} = tempRoot.find(j.Program).paths()[0].node
@@ -59,52 +64,52 @@ module.exports = async function addGraphQLFlowTypes({file, schema, schemaFile, s
       tempFileWritten = true
       await fs.writeFile(tempFile, tempRoot.toSource(), 'utf8')
 
-      const babelNode = require('path').resolve(findRoot(__dirname), 'node_modules', '.bin', 'babel-node')
-      const {stdout} = await execFile(babelNode, [tempFile], {cwd: findRoot(file), encoding: 'utf8'})
-      const jsonPart = stdout.substring(
-        stdout.indexOf('__BEGIN_GRAPHQL_QUERIES__') + '__BEGIN_GRAPHQL_QUERIES__'.length,
-        stdout.indexOf('__END_GRAPHQL_QUERIES__')
-      )
-      queries = JSON.parse(jsonPart)
+      const babelNode = require('path').resolve(findRoot(__dirname), 'node_modules', '.bin', 'babel-node');
+      ({stdout} = await execFile(babelNode, [tempFile], {cwd: findRoot(file), encoding: 'utf8'}))
+    } finally {
+      if (tempFileWritten) await fs.remove(tempFile)
     }
-
-    const addedTypeAliases = new Set()
-
-    for (let path of queryPaths) {
-      const {node} = path
-      const {quasi: {quasis}} = node
-      const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
-      const types = await graphqlToFlow({
-        file,
-        schema,
-        schemaFile,
-        server,
-        query: queries && queries[declarator.id.name] || quasis[0].value.raw,
-        ApolloQueryResult,
-      })
-      for (let type of types) {
-        addedTypeAliases.add(type)
-        const comment = j.commentLine(AUTO_GENERATED_COMMENT)
-        comment.leading = true
-        if (!type.comments) type.comments = []
-        type.comments.push(comment)
-        const {id: {name}} = type
-        const existing = root.find(j.TypeAlias, {id: {name}})
-        if (existing.size() > 0) existing.at(0).replaceWith(type)
-        else j(path).closest(j.VariableDeclaration).at(0).insertAfter(type)
-      }
-    }
-
-    root.find(j.TypeAlias).filter(({node}) => {
-      if (addedTypeAliases.has(node)) return false
-      if (!node.comments) return false
-      return node.comments.findIndex(comment =>
-        comment.value.trim().toLowerCase() === AUTO_GENERATED_COMMENT.trim().toLowerCase()
-      ) >= 0
-    }).remove()
-  } finally {
-    if (tempFileWritten) await fs.remove(tempFile)
+    const jsonPart = stdout.substring(
+      stdout.indexOf('__BEGIN_GRAPHQL_QUERIES__') + '__BEGIN_GRAPHQL_QUERIES__'.length,
+      stdout.indexOf('__END_GRAPHQL_QUERIES__')
+    )
+    queries = JSON.parse(jsonPart)
   }
+
+  const addedTypeAliases = new Set()
+
+  for (let path of queryPaths) {
+    const {node} = path
+    const {quasi: {quasis}} = node
+    const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
+    const types = await graphqlToFlow({
+      file,
+      schema,
+      schemaFile,
+      server,
+      query: queries && queries[declarator.id.name] || quasis[0].value.raw,
+      ApolloQueryResult,
+    })
+    for (let type of types) {
+      addedTypeAliases.add(type)
+      const comment = j.commentLine(AUTO_GENERATED_COMMENT)
+      comment.leading = true
+      if (!type.comments) type.comments = []
+      type.comments.push(comment)
+      const {id: {name}} = type
+      const existing = root.find(j.TypeAlias, {id: {name}})
+      if (existing.size() > 0) existing.at(0).replaceWith(type)
+      else j(path).closest(j.VariableDeclaration).at(0).insertAfter(type)
+    }
+  }
+
+  root.find(j.TypeAlias).filter(({node}) => {
+    if (addedTypeAliases.has(node)) return false
+    if (!node.comments) return false
+    return node.comments.findIndex(comment =>
+      comment.value.trim().toLowerCase() === AUTO_GENERATED_COMMENT.trim().toLowerCase()
+    ) >= 0
+  }).remove()
 
   return root
 }

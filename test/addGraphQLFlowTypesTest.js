@@ -2,7 +2,6 @@
 
 import {describe, it} from 'mocha'
 import {expect} from 'chai'
-const j = require('jscodeshift').withParser('babylon')
 
 import addGraphQLFlowTypes from '../src/addGraphQLFlowTypes'
 
@@ -54,17 +53,21 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 }
 \`
 
-type getStuffVariables = {}
+// auto-generated from GraphQL
+type GetStuffVariables = {}
+
+// auto-generated from GraphQL
+type ObsoleteType = {}
     `
 
-    const root = j(code)
-
-    await addGraphQLFlowTypes({
-      root,
+    const root = await addGraphQLFlowTypes({
+      code,
       schemaFile: require.resolve('./schema.graphql'),
     })
 
     expect(root.toSource().trim()).to.equal(`import gql from 'graphql-tag'
+
+import type { ApolloQueryResult, QueryRenderProps } from "react-apollo";
 
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
@@ -109,7 +112,8 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 }
 \`
 
-type getStuffData = {
+// auto-generated from GraphQL
+type GetStuffQueryData = {
   roles: Object,
   item: ?{
     id: number,
@@ -122,9 +126,7 @@ type getStuffData = {
       pageInfo: { hasNextPage: boolean },
       edges: ?Array<{ node: {
         id: number,
-        mqttTag: string,
-        multiplier: ?number,
-        offset: ?number,
+        ...ChannelFieldsData,
       } }>,
     },
     TagPrefixes: {
@@ -138,20 +140,8 @@ type getStuffData = {
   },
 };
 
-type createDeviceMutate = (options: {
-  variables: createDeviceVariables,
-}) => Promise<createDeviceData>
-type createDeviceData = { device: { id: number } };
-
-type createDeviceVariables = {
-  organizationId: number,
-  values: {
-    name: string,
-    type?: ?("MQTT"),
-  },
-};
-
-type getStuffVariables = {
+// auto-generated from GraphQL
+type GetStuffQueryVariables = {
   userGroupId: number,
   id: number,
   newChannel: {
@@ -178,6 +168,30 @@ type getStuffVariables = {
     multiplier?: ?number,
     offset?: ?number,
   },
+};
+
+// auto-generated from GraphQL
+type PerformCreateDeviceMutation = (options: {
+  variables: CreateDeviceMutationVariables,
+}) => Promise<ApolloQueryResult<CreateDeviceMutationData>>;
+
+// auto-generated from GraphQL
+type CreateDeviceMutationData = { device: { id: number } };
+
+// auto-generated from GraphQL
+type CreateDeviceMutationVariables = {
+  organizationId: number,
+  values: {
+    name: string,
+    type?: ?("MQTT"),
+  },
+};
+
+// auto-generated from GraphQL
+type ChannelFieldsData = {
+  mqttTag: string,
+  multiplier: ?number,
+  offset: ?number,
 };`)
   })
 })
