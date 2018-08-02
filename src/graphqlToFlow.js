@@ -32,7 +32,6 @@ module.exports = async function graphqlToFlow({
   schema,
   schemaFile,
   server,
-  exploded,
   ApolloQueryResult = 'ApolloQueryResult',
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
@@ -58,8 +57,8 @@ module.exports = async function graphqlToFlow({
 
   function convertFragmentDefinition(def) {
     const type = convertSelectionSet(def.selectionSet, types[def.typeCondition.name.value])
-    fragments.set(def.name.value, type)
-    if (exploded) addObjectTypeAlias(`${def.name.value}Data`, type)
+    const alias = addObjectTypeAlias(`${upperFirst(def.name.value)}Data`, type)
+    fragments.set(def.name.value, alias)
   }
 
   function convertOperationDefinition(def) {
@@ -144,13 +143,9 @@ module.exports = async function graphqlToFlow({
   }
 
   function convertFragmentSpread(spread, type) {
-    if (exploded) {
-      return j.objectTypeSpreadProperty(j.genericTypeAnnotation(j.identifier(`${spread.name.value}Data`), null))
-    } else {
-      const fragment = fragments.get(spread.name.value)
-      if (!fragment) throw new Error('missing fragment definition named `${spread.name.value}`')
-      return fragment.properties
-    }
+    const alias = fragments.get(spread.name.value)
+    if (!alias) throw new Error(`missing fragment definition named ${spread.name.value}`)
+    return j.objectTypeSpreadProperty(j.genericTypeAnnotation(j.identifier(alias.id.name), null))
   }
 
   const objectTypeCounts = {}
@@ -185,12 +180,7 @@ module.exports = async function graphqlToFlow({
     else if (selectionSet) {
       const innerType = getInnerType(type)
       const fieldType = innerType.fields[name.value].type
-      if (exploded) {
-        addObjectTypeAlias(`${innerType.name}Data`, convertSelectionSet(selectionSet, innerType))
-        typeValue = convertType(fieldType)
-      } else {
-        typeValue = convertType(fieldType, selectionSet)
-      }
+      typeValue = convertType(fieldType, selectionSet)
     } else {
       const innerType = getInnerType(type)
       typeValue = convertType(innerType.fields[name.value].type)
@@ -223,12 +213,7 @@ module.exports = async function graphqlToFlow({
     }
     if (types[name]) type = types[name]
     if (type.inputFields) return convertInputType(type)
-    if (exploded) {
-      let name = `${type.name}Data`
-      const count = objectTypeCounts[name]
-      if (count > 0) name += count
-      return j.genericTypeAnnotation(j.identifier(name), null)
-    } else if (selectionSet) {
+    if (selectionSet) {
       return convertSelectionSet(selectionSet, type)
     } else {
       return j.anyTypeAnnotation()
