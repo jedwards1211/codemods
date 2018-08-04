@@ -50,10 +50,10 @@ describe(`graphqlToFlow`, function () {
     }
     `
 
-    for (let def of await graphqlToFlow({
+    for (let def of (await graphqlToFlow({
       schemaFile: require.resolve('./schema.graphql'),
       query,
-    })) {
+    })).statements) {
       console.log(recast.print(def).code) // eslint-disable-line no-console
     }
   })

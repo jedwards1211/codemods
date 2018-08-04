@@ -33,6 +33,7 @@ module.exports = async function graphqlToFlow({
   schemaFile,
   server,
   ApolloQueryResult = 'ApolloQueryResult',
+  MutationFunction = 'MutationFunction',
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
 
@@ -46,7 +47,12 @@ module.exports = async function graphqlToFlow({
   const types = await getSchemaTypes({schema, server})
 
   const fragments = new Map()
-  const result = []
+  const statements = []
+  const generatedTypes = {
+    query: {},
+    mutation: {},
+    subscription: {},
+  }
 
   function convertDefinition(def) {
     switch (def.kind) {
@@ -70,20 +76,23 @@ module.exports = async function graphqlToFlow({
     if (name.toLowerCase().lastIndexOf(operation) < 0) {
       name += upperFirst(operation)
     }
+    const operationTypes = def.name
+      ? generatedTypes[operation][def.name.value] = {}
+      : {}
     if (variableDefinitions && variableDefinitions.length) {
-      addObjectTypeAlias(
+      operationTypes.variables = addObjectTypeAlias(
         `${name}Variables`,
         convertVariableDefinitions(variableDefinitions)
       )
     }
-    addObjectTypeAlias(
+    operationTypes.data = addObjectTypeAlias(
       `${name}Data`,
       convertSelectionSet(selectionSet, types[upperFirst(operation)])
     )
     if (operation === 'mutation') {
-      result.push(statement([`type Perform${name} = (options: {
-  variables: ${name}Variables,
-}) => Promise<${ApolloQueryResult}<${name}Data>>`]))
+      statements.push(operationTypes.mutationFunction = statement([
+        `type ${name}Function = ${MutationFunction}<${operationTypes.data.id.name}${operationTypes.variables ? `, ${operationTypes.variables.id.name}` : ''}>`
+      ]))
     }
   }
 
@@ -163,7 +172,7 @@ module.exports = async function graphqlToFlow({
       null,
       properties
     )
-    result.push(alias)
+    statements.push(alias)
     return alias
   }
 
@@ -247,5 +256,5 @@ module.exports = async function graphqlToFlow({
   }
   for (let def of otherDefinitions) convertDefinition(def)
 
-  return result
+  return {statements, generatedTypes}
 }

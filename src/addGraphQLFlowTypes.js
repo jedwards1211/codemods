@@ -5,23 +5,58 @@ const graphqlToFlow = require('./graphqlToFlow')
 const fs = require('fs-extra')
 const {execFile} = require('promisify-child-process')
 const findRoot = require('find-root')
+const graphql = require('graphql')
+const once = require('lodash/once')
 
 const {expression, statement} = j.template
 
-const AUTO_GENERATED_COMMENT = ' auto-generated from GraphQL'
+const PRAGMA = '@graphql-to-flow'
+const AUTO_GENERATED_COMMENT = ` ${PRAGMA} auto-generated`
+const IGNORE_REGEX = new RegExp(`^\\s*${PRAGMA}\\s+ignore`)
+
+function onlyValue(obj) {
+  const values = Object.values(obj)
+  if (values.length !== 1) return undefined
+  return values[0]
+}
+
+function getChildFunction(elementPath) {
+  const childFunctionContainer = j(elementPath).find(j.JSXExpressionContainer).filter(path =>
+    path.parentPath && path.parentPath.parentPath.node === elementPath.node
+  ).at(0)
+  if (childFunctionContainer.size()) {
+    return childFunctionContainer.get('expression')
+  }
+  return null
+}
+
+function hasIgnoreComment(collection) {
+  if (!collection.size()) return false
+  const {comments} = collection.nodes()[0]
+  return comments && comments.findIndex(comment => comment.leading && IGNORE_REGEX.test(comment.value)) >= 0
+}
 
 module.exports = async function addGraphQLFlowTypes(options) {
   const {file, schema, schemaFile, server} = options
   const code = options.code || await fs.readFile(file, 'utf8')
   const root = j(code)
   const {gql} = findImports(root, statement`import gql from 'graphql-tag'`)
-  const {ApolloQueryResult} = addImports(
+  const addMutationFunction = once(() => addImports(
     root,
-    statement`import type {ApolloQueryResult, QueryRenderProps} from 'react-apollo'`
-  )
+    statement`import type {MutationFunction} from 'react-apollo'`
+  ).MutationFunction)
+  const addQueryRenderProps = once(() => addImports(
+    root,
+    statement`import type {QueryRenderProps} from 'react-apollo'`
+  ).QueryRenderProps)
 
   const findQueryPaths = root => [...root.find(j.TaggedTemplateExpression, {tag: {name: gql}}).paths()]
-    .filter(path => j(path).closest(j.VariableDeclarator).size())
+    .filter(path => {
+      if (hasIgnoreComment(j(path).closest(j.VariableDeclarator))) return false
+      if (hasIgnoreComment(j(path).closest(j.VariableDeclaration))) return false
+      if (hasIgnoreComment(j(path).closest(j.ExportNamedDeclaration))) return false
+      return true
+    })
     .reverse()
 
   const queryPaths = findQueryPaths(root)
@@ -76,40 +111,148 @@ module.exports = async function addGraphQLFlowTypes(options) {
     queries = JSON.parse(jsonPart)
   }
 
-  const addedTypeAliases = new Set()
+  const addedStatements = new Set()
 
   for (let path of queryPaths) {
     const {node} = path
     const {quasi: {quasis}} = node
     const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
-    const types = await graphqlToFlow({
+    const query = queries && queries[declarator.id.name] || quasis[0].value.raw
+    const queryAST = typeof query === 'string' ? graphql.parse(query) : query
+    let MutationFunction = 'MutationFunction'
+    const queryNames = []
+    const mutationNames = []
+    graphql.visit(queryAST, {
+      [graphql.Kind.OPERATION_DEFINITION]({operation, name}) {
+        switch (operation) {
+        case 'query':
+          addQueryRenderProps()
+          if (name) queryNames.push(name.value)
+          break
+        case 'mutation':
+          MutationFunction = addMutationFunction()
+          if (name) mutationNames.push(name.value)
+          break
+        }
+      }
+    })
+    const {statements: types, generatedTypes} = await graphqlToFlow({
       file,
       schema,
       schemaFile,
       server,
-      query: queries && queries[declarator.id.name] || quasis[0].value.raw,
-      ApolloQueryResult,
+      query,
+      MutationFunction,
     })
     for (let type of types) {
-      addedTypeAliases.add(type)
       const comment = j.commentLine(AUTO_GENERATED_COMMENT)
       comment.leading = true
       if (!type.comments) type.comments = []
       type.comments.push(comment)
       const {id: {name}} = type
       const existing = root.find(j.TypeAlias, {id: {name}})
-      if (existing.size() > 0) existing.at(0).replaceWith(type)
-      else j(path).closest(j.VariableDeclaration).at(0).insertAfter(type)
+      let parent = j(path).closest(j.ExportNamedDeclaration)
+      if (existing.size() > 0) {
+        existing.at(0).replaceWith(type)
+        addedStatements.add(type)
+      } else if (parent.size()) {
+        const exportDecl = j.exportNamedDeclaration(type, [], null)
+        exportDecl.comments = type.comments
+        type.comments = []
+        parent.at(0).insertAfter(exportDecl)
+        addedStatements.add(exportDecl)
+      } else {
+        j(path).closest(j.Statement).at(0).insertAfter(type)
+        addedStatements.add(type)
+      }
+    }
+
+    if (queryNames.length) {
+      const {Query} = findImports(root, statement`import {Query} from 'react-apollo'`)
+      root.find(j.JSXOpeningElement, {name: {name: Query}}).forEach(path => {
+        const queryAttr = j(path).find(j.JSXAttribute, {
+          name: {name: 'query'},
+          value: {expression: {name: declarator.id.name}},
+        }).at(0)
+        if (!queryAttr.size()) return
+
+        const variablesAttr = j(path).find(j.JSXAttribute, {name: {name: 'variables'}}).at(0)
+        const variablesValue = variablesAttr.find(j.JSXExpressionContainer).get('expression')
+        const {variables} = onlyValue(generatedTypes.query) || {}
+        if (!variables) return
+        if (variablesValue.value.type === 'ObjectExpression') {
+          variablesValue.replace(j.typeCastExpression(
+            variablesValue.value,
+            j.typeAnnotation(
+              j.genericTypeAnnotation(
+                j.identifier(variables.id.name),
+                null
+              )
+            )
+          ))
+        }
+
+        const elementPath = path.parentPath
+        const childFunction = getChildFunction(elementPath)
+        if (childFunction) {
+          const firstParam = childFunction.get('params', 0)
+          const {data} = onlyValue(generatedTypes.query) || {}
+          if (!data) return
+          if (firstParam && firstParam.node.type === 'Identifier') {
+            const newIdentifier = j.identifier(firstParam.node.name)
+            newIdentifier.typeAnnotation = j.typeAnnotation(
+              j.genericTypeAnnotation(
+                j.identifier(data.id.name),
+                null
+              )
+            )
+            firstParam.replace(newIdentifier)
+          }
+        }
+      })
+    }
+
+    if (mutationNames.length) {
+      const {Mutation} = findImports(root, statement`import {Mutation} from 'react-apollo'`)
+      root.find(j.JSXOpeningElement, {name: {name: Mutation}}).forEach(path => {
+        const mutationAttr = j(path).find(j.JSXAttribute, {
+          name: {name: 'mutation'},
+          value: {expression: {name: declarator.id.name}},
+        }).at(0)
+        if (!mutationAttr.size()) return
+
+        const elementPath = path.parentPath
+        const childFunction = getChildFunction(elementPath)
+        if (childFunction) {
+          const firstParam = childFunction.get('params', 0)
+          const {mutationFunction} = onlyValue(generatedTypes.mutation) || {}
+          if (!mutationFunction) return
+          if (firstParam && firstParam.node.type === 'Identifier') {
+            const newIdentifier = j.identifier(firstParam.node.name)
+            newIdentifier.typeAnnotation = j.typeAnnotation(
+              j.genericTypeAnnotation(
+                j.identifier(mutationFunction.id.name),
+                null
+              )
+            )
+            firstParam.replace(newIdentifier)
+          }
+        }
+      })
     }
   }
 
-  root.find(j.TypeAlias).filter(({node}) => {
-    if (addedTypeAliases.has(node)) return false
+  function stalePaths(path) {
+    const {node} = path
+    if (addedStatements.has(node)) return false
     if (!node.comments) return false
     return node.comments.findIndex(comment =>
       comment.value.trim().toLowerCase() === AUTO_GENERATED_COMMENT.trim().toLowerCase()
     ) >= 0
-  }).remove()
+  }
+
+  root.find(j.TypeAlias).filter(stalePaths).remove()
+  root.find(j.ExportNamedDeclaration).filter(stalePaths).remove()
 
   return root
 }

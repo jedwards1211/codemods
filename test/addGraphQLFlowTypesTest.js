@@ -8,18 +8,21 @@ import addGraphQLFlowTypes from '../src/addGraphQLFlowTypes'
 describe(`addGraphQLFlowTypes`, function () {
   it(`works`, async function (): Promise<void> {
     const code = `
+import {Query, Mutation} from 'react-apollo'
 import gql from 'graphql-tag'
+
+// @graphql-to-flow ignore
+const ignoredQuery = gql\`
+query {
+  currentUser
+}
+\`
 
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
   multiplier
   offset
-}
-mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
-  device: createDevice(organizationId: $organizationId, value: $values) {
-    id
-  }
 }
 query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChannel!) {
   roles: userGroupRolesInDeviceGroup(userGroupId: $userGroupId, deviceGroupId: $id)
@@ -53,32 +56,58 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 }
 \`
 
-// auto-generated from GraphQL
+const mutation = gql\`
+mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
+  device: createDevice(organizationId: $organizationId, value: $values) {
+    id
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
 type GetStuffVariables = {}
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type ObsoleteType = {}
-    `
+
+const ViewContainer = () => (
+  <Mutation mutation={mutation}>
+    {(createDevice) => (
+      <Query
+        query={query}
+        variables={{baz: 'qux'}}
+      >
+        {(data) => (
+          <div />
+        )}
+      </Query>
+    )}
+  </Mutation>
+)
+`
 
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
     })
 
-    expect(root.toSource().trim()).to.equal(`import gql from 'graphql-tag'
+    expect(root.toSource().trim()).to.equal(`import {Query, Mutation} from 'react-apollo'
+import gql from 'graphql-tag'
 
-import type { ApolloQueryResult, QueryRenderProps } from "react-apollo";
+import type { MutationFunction, QueryRenderProps } from "react-apollo";
+
+// @graphql-to-flow ignore
+const ignoredQuery = gql\`
+query {
+  currentUser
+}
+\`
 
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
   multiplier
   offset
-}
-mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
-  device: createDevice(organizationId: $organizationId, value: $values) {
-    id
-  }
 }
 query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChannel!) {
   roles: userGroupRolesInDeviceGroup(userGroupId: $userGroupId, deviceGroupId: $id)
@@ -112,7 +141,7 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 }
 \`
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type GetStuffQueryData = {
   roles: Object,
   item: ?{
@@ -140,7 +169,7 @@ type GetStuffQueryData = {
   },
 };
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type GetStuffQueryVariables = {
   userGroupId: number,
   id: number,
@@ -170,15 +199,28 @@ type GetStuffQueryVariables = {
   },
 };
 
-// auto-generated from GraphQL
-type PerformCreateDeviceMutation = (options: {
-  variables: CreateDeviceMutationVariables,
-}) => Promise<ApolloQueryResult<CreateDeviceMutationData>>;
+// @graphql-to-flow auto-generated
+type ChannelFieldsData = {
+  mqttTag: string,
+  multiplier: ?number,
+  offset: ?number,
+};
 
-// auto-generated from GraphQL
+const mutation = gql\`
+mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
+  device: createDevice(organizationId: $organizationId, value: $values) {
+    id
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+type CreateDeviceMutationFunction = MutationFunction<CreateDeviceMutationData, CreateDeviceMutationVariables>;
+
+// @graphql-to-flow auto-generated
 type CreateDeviceMutationData = { device: { id: number } };
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type CreateDeviceMutationVariables = {
   organizationId: number,
   values: {
@@ -187,11 +229,19 @@ type CreateDeviceMutationVariables = {
   },
 };
 
-// auto-generated from GraphQL
-type ChannelFieldsData = {
-  mqttTag: string,
-  multiplier: ?number,
-  offset: ?number,
-};`)
+const ViewContainer = () => (
+  <Mutation mutation={mutation}>
+    {(createDevice: CreateDeviceMutationFunction) => (
+      <Query
+        query={query}
+        variables={({baz: 'qux'}: GetStuffQueryVariables)}
+      >
+        {(data: GetStuffQueryData) => (
+          <div />
+        )}
+      </Query>
+    )}
+  </Mutation>
+)`)
   })
 })
