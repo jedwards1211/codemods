@@ -13,28 +13,7 @@ const {expression, statement} = j.template
 const PRAGMA = '@graphql-to-flow'
 const AUTO_GENERATED_COMMENT = ` ${PRAGMA} auto-generated`
 const IGNORE_REGEX = new RegExp(`^\\s*${PRAGMA}\\s+ignore`)
-
-function onlyValue(obj) {
-  const values = Object.values(obj)
-  if (values.length !== 1) return undefined
-  return values[0]
-}
-
-function getChildFunction(elementPath) {
-  const childFunctionContainer = j(elementPath).find(j.JSXExpressionContainer).filter(path =>
-    path.parentPath && path.parentPath.parentPath.node === elementPath.node
-  ).at(0)
-  if (childFunctionContainer.size()) {
-    return childFunctionContainer.get('expression')
-  }
-  return null
-}
-
-function hasIgnoreComment(collection) {
-  if (!collection.size()) return false
-  const {comments} = collection.nodes()[0]
-  return comments && comments.findIndex(comment => comment.leading && IGNORE_REGEX.test(comment.value)) >= 0
-}
+const EXTRACT_TYPES_REGEX = new RegExp(`^\\s*${PRAGMA}\\s+extract-types:\\s*(.*)$`)
 
 module.exports = async function addGraphQLFlowTypes(options) {
   const {file, schema, schemaFile, server} = options
@@ -72,43 +51,10 @@ module.exports = async function addGraphQLFlowTypes(options) {
     }
   }
 
-  let queries
+  let evaluatedQueries
 
   if (evalNeeded) {
-    const tempFile = file.replace(/\.js$/, '_TEMP.js')
-    let tempFileWritten = false
-    let stdout
-    try {
-      const tempRoot = j(code)
-      const properties = []
-      const {body} = tempRoot.find(j.Program).paths()[0].node
-      body.push(statement`import {print as __graphql_print__} from 'graphql'
-      `)
-      for (let path of findQueryPaths(tempRoot)) {
-        const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
-        properties.push(j.objectProperty(
-          j.identifier(declarator.id.name),
-          expression`__graphql_print__(${j.identifier(declarator.id.name)})`
-        ))
-      }
-      body.push(statement`console.log('__BEGIN_GRAPHQL_QUERIES__')`)
-      body.push(statement`
-        console.log(JSON.stringify(${j.objectExpression(properties)}))
-      `)
-      body.push(statement`console.log('__END_GRAPHQL_QUERIES__')`)
-      tempFileWritten = true
-      await fs.writeFile(tempFile, tempRoot.toSource(), 'utf8')
-
-      const babelNode = require('path').resolve(findRoot(__dirname), 'node_modules', '.bin', 'babel-node');
-      ({stdout} = await execFile(babelNode, [tempFile], {cwd: findRoot(file), encoding: 'utf8'}))
-    } finally {
-      if (tempFileWritten) await fs.remove(tempFile)
-    }
-    const jsonPart = stdout.substring(
-      stdout.indexOf('__BEGIN_GRAPHQL_QUERIES__') + '__BEGIN_GRAPHQL_QUERIES__'.length,
-      stdout.indexOf('__END_GRAPHQL_QUERIES__')
-    )
-    queries = JSON.parse(jsonPart)
+    evaluatedQueries = await evaluateQueries()
   }
 
   const addedStatements = new Set()
@@ -117,7 +63,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
     const {node} = path
     const {quasi: {quasis}} = node
     const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
-    const query = queries && queries[declarator.id.name] || quasis[0].value.raw
+    const query = evaluatedQueries && evaluatedQueries[declarator.id.name] || quasis[0].value.raw
     const queryAST = typeof query === 'string' ? graphql.parse(query) : query
     let MutationFunction = 'MutationFunction'
     const queryNames = []
@@ -136,6 +82,10 @@ module.exports = async function addGraphQLFlowTypes(options) {
         }
       }
     })
+    const extractTypes = new Set()
+    getTypesToExtract(j(path).closest(j.VariableDeclarator), extractTypes)
+    getTypesToExtract(j(path).closest(j.VariableDeclaration), extractTypes)
+    getTypesToExtract(j(path).closest(j.ExportNamedDeclaration), extractTypes)
     const {statements: types, generatedTypes} = await graphqlToFlow({
       file,
       schema,
@@ -143,6 +93,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       server,
       query,
       MutationFunction,
+      extractTypes
     })
     for (let type of types) {
       const comment = j.commentLine(AUTO_GENERATED_COMMENT)
@@ -242,7 +193,44 @@ module.exports = async function addGraphQLFlowTypes(options) {
     }
   }
 
-  function stalePaths(path) {
+  async function evaluateQueries() {
+    const tempFile = file.replace(/\.js$/, '_TEMP.js')
+    let tempFileWritten = false
+    let stdout
+    try {
+      const tempRoot = j(code)
+      const properties = []
+      const {body} = tempRoot.find(j.Program).paths()[0].node
+      body.push(statement`import {print as __graphql_print__} from 'graphql'
+      `)
+      for (let path of findQueryPaths(tempRoot)) {
+        const declarator = j(path).closest(j.VariableDeclarator).nodes()[0]
+        properties.push(j.objectProperty(
+          j.identifier(declarator.id.name),
+          expression`__graphql_print__(${j.identifier(declarator.id.name)})`
+        ))
+      }
+      body.push(statement`console.log('__BEGIN_GRAPHQL_QUERIES__')`)
+      body.push(statement`
+        console.log(JSON.stringify(${j.objectExpression(properties)}))
+      `)
+      body.push(statement`console.log('__END_GRAPHQL_QUERIES__')`)
+      tempFileWritten = true
+      await fs.writeFile(tempFile, tempRoot.toSource(), 'utf8')
+
+      const babelNode = require('path').resolve(findRoot(__dirname), 'node_modules', '.bin', 'babel-node');
+      ({stdout} = await execFile(babelNode, [tempFile], {cwd: findRoot(file), encoding: 'utf8'}))
+    } finally {
+      if (tempFileWritten) await fs.remove(tempFile)
+    }
+    const jsonPart = stdout.substring(
+      stdout.indexOf('__BEGIN_GRAPHQL_QUERIES__') + '__BEGIN_GRAPHQL_QUERIES__'.length,
+      stdout.indexOf('__END_GRAPHQL_QUERIES__')
+    )
+    evaluatedQueries = JSON.parse(jsonPart)
+  }
+
+  function isStale(path) {
     const {node} = path
     if (addedStatements.has(node)) return false
     if (!node.comments) return false
@@ -251,8 +239,42 @@ module.exports = async function addGraphQLFlowTypes(options) {
     ) >= 0
   }
 
-  root.find(j.TypeAlias).filter(stalePaths).remove()
-  root.find(j.ExportNamedDeclaration).filter(stalePaths).remove()
+  root.find(j.TypeAlias).filter(isStale).remove()
+  root.find(j.ExportNamedDeclaration).filter(isStale).remove()
 
   return root
+}
+
+function onlyValue(obj) {
+  const values = Object.values(obj)
+  if (values.length !== 1) return undefined
+  return values[0]
+}
+
+function getChildFunction(elementPath) {
+  const childFunctionContainer = j(elementPath).find(j.JSXExpressionContainer).filter(path =>
+    path.parentPath && path.parentPath.parentPath.node === elementPath.node
+  ).at(0)
+  if (childFunctionContainer.size()) {
+    return childFunctionContainer.get('expression')
+  }
+  return null
+}
+
+function hasIgnoreComment(collection) {
+  if (!collection.size()) return false
+  const {comments} = collection.nodes()[0]
+  return comments && comments.findIndex(comment => comment.leading && IGNORE_REGEX.test(comment.value)) >= 0
+}
+
+function getTypesToExtract(collection, resultSet) {
+  if (!collection.size()) return
+  const {comments} = collection.nodes()[0]
+  if (!comments) return
+  comments.forEach(comment => {
+    if (!comment.leading) return
+    const match = EXTRACT_TYPES_REGEX.exec(comment.value)
+    if (!match) return
+    match[1].split(/\s+|\s*,\s*/g).forEach(type => resultSet.add(type))
+  })
 }

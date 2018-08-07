@@ -34,6 +34,7 @@ module.exports = async function graphqlToFlow({
   server,
   ApolloQueryResult = 'ApolloQueryResult',
   MutationFunction = 'MutationFunction',
+  extractTypes = new Set(),
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
 
@@ -63,7 +64,7 @@ module.exports = async function graphqlToFlow({
 
   function convertFragmentDefinition(def) {
     const type = convertSelectionSet(def.selectionSet, types[def.typeCondition.name.value])
-    const alias = addObjectTypeAlias(`${upperFirst(def.name.value)}Data`, type)
+    const alias = addTypeAlias(`${upperFirst(def.name.value)}Data`, type)
     fragments.set(def.name.value, alias)
   }
 
@@ -80,12 +81,12 @@ module.exports = async function graphqlToFlow({
       ? generatedTypes[operation][def.name.value] = {}
       : {}
     if (variableDefinitions && variableDefinitions.length) {
-      operationTypes.variables = addObjectTypeAlias(
+      operationTypes.variables = addTypeAlias(
         `${name}Variables`,
         convertVariableDefinitions(variableDefinitions)
       )
     }
-    operationTypes.data = addObjectTypeAlias(
+    operationTypes.data = addTypeAlias(
       `${name}Data`,
       convertSelectionSet(selectionSet, types[upperFirst(operation)])
     )
@@ -94,6 +95,25 @@ module.exports = async function graphqlToFlow({
         `type ${name}Function = ${MutationFunction}<${operationTypes.data.id.name}${operationTypes.variables ? `, ${operationTypes.variables.id.name}` : ''}>`
       ]))
     }
+  }
+
+  const typeAliasCounts = {}
+
+  function addTypeAlias(name, type) {
+    let count = typeAliasCounts[name]
+    if (count != null) {
+      typeAliasCounts[name] = ++count
+      name += count
+    } else {
+      typeAliasCounts[name] = 0
+    }
+    const alias = j.typeAlias(
+      j.identifier(name),
+      null,
+      type
+    )
+    statements.push(alias)
+    return alias
   }
 
   function convertVariableDefinitions(variableDefinitions) {
@@ -157,25 +177,6 @@ module.exports = async function graphqlToFlow({
     return j.objectTypeSpreadProperty(j.genericTypeAnnotation(j.identifier(alias.id.name), null))
   }
 
-  const objectTypeCounts = {}
-
-  function addObjectTypeAlias(name, properties) {
-    let count = objectTypeCounts[name]
-    if (count != null) {
-      objectTypeCounts[name] = ++count
-      name += count
-    } else {
-      objectTypeCounts[name] = 0
-    }
-    const alias = j.typeAlias(
-      j.identifier(name),
-      null,
-      properties
-    )
-    statements.push(alias)
-    return alias
-  }
-
   function getInnerType(type) {
     let innerType = type
     while (innerType.ofType) innerType = innerType.ofType
@@ -208,10 +209,19 @@ module.exports = async function graphqlToFlow({
 
   function innerConvertType(type, selectionSet) {
     if (type.kind === 'LIST') return convertListType(type, selectionSet)
-    if (type.kind === 'ENUM') return j.unionTypeAnnotation(type.enumValues.map(
-      value => j.stringLiteralTypeAnnotation(value.name, value.name)
-    ))
     const {name} = type
+    function extractIfNecessary(result) {
+      if (extractTypes.has(name)) {
+        const alias = addTypeAlias(name, result)
+        return j.genericTypeAnnotation(j.identifier(alias.id.name), null)
+      }
+      return result
+    }
+    if (type.kind === 'ENUM') return extractIfNecessary(
+      j.unionTypeAnnotation(type.enumValues.map(
+        value => j.stringLiteralTypeAnnotation(value.name, value.name)
+      ))
+    )
     switch (name) {
     case 'Boolean': return j.booleanTypeAnnotation()
     case 'Int':
@@ -220,13 +230,16 @@ module.exports = async function graphqlToFlow({
     case 'String': return j.stringTypeAnnotation()
     case 'JSON': return j.genericTypeAnnotation(j.identifier('Object'), null)
     }
-    if (types[name]) type = types[name]
-    if (type.inputFields) return convertInputType(type)
-    if (selectionSet) {
-      return convertSelectionSet(selectionSet, type)
-    } else {
-      return j.anyTypeAnnotation()
+    function convertCustomType(type, selectionSet) {
+      if (types[name]) type = types[name]
+      if (type.inputFields) return convertInputType(type)
+      if (selectionSet) {
+        return convertSelectionSet(selectionSet, type)
+      } else {
+        return j.anyTypeAnnotation()
+      }
     }
+    return extractIfNecessary(convertCustomType(type, selectionSet))
   }
 
   function convertListType(type, selectionSet) {
@@ -248,13 +261,13 @@ module.exports = async function graphqlToFlow({
     )
   }
 
-  let otherDefinitions = []
   // convert fragments first
   for (let def of document.definitions) {
     if (def.kind === 'FragmentDefinition') convertFragmentDefinition(def)
-    else otherDefinitions.push(def)
   }
-  for (let def of otherDefinitions) convertDefinition(def)
+  for (let def of document.definitions) {
+    if (def.kind !== 'FragmentDefinition') convertDefinition(def)
+  }
 
   return {statements, generatedTypes}
 }

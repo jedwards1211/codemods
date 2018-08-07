@@ -18,6 +18,7 @@ query {
 }
 \`
 
+// @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
@@ -33,6 +34,7 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
   }
   MQTTDeviceChannelGroup(id: $channelGroupId) {
     id
+    direction
     Channels {
       pageInfo {
         hasNextPage
@@ -103,6 +105,7 @@ query {
 }
 \`
 
+// @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
@@ -118,6 +121,7 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
   }
   MQTTDeviceChannelGroup(id: $channelGroupId) {
     id
+    direction
     Channels {
       pageInfo {
         hasNextPage
@@ -151,23 +155,33 @@ type GetStuffQueryData = {
   },
   MQTTDeviceChannelGroup: ?{
     id: number,
+    direction: DeviceDirection1,
     Channels: {
       pageInfo: { hasNextPage: boolean },
-      edges: ?Array<{ node: {
-        id: number,
-        ...ChannelFieldsData,
-      } }>,
+      edges: ?Array<{ node: MQTTDeviceChannel }>,
     },
     TagPrefixes: {
       id: number,
       deviceTagPrefix: string,
     },
   },
-  MQTTDeviceChannel: ?{
-    id: number,
-    mqttTag: string,
-  },
+  MQTTDeviceChannel: ?MQTTDeviceChannel1,
 };
+
+// @graphql-to-flow auto-generated
+type MQTTDeviceChannel1 = {
+  id: number,
+  mqttTag: string,
+};
+
+// @graphql-to-flow auto-generated
+type MQTTDeviceChannel = {
+  id: number,
+  ...ChannelFieldsData,
+};
+
+// @graphql-to-flow auto-generated
+type DeviceDirection1 = "FROM_DEVICE" | "TO_DEVICE";
 
 // @graphql-to-flow auto-generated
 type GetStuffQueryVariables = {
@@ -176,7 +190,7 @@ type GetStuffQueryVariables = {
   newChannel: {
     deviceId: number,
     channelGroupId: number,
-    direction: "FROM_DEVICE" | "TO_DEVICE",
+    direction: DeviceDirection,
     tagInDevice: string,
     MetadataItem?: ?{
       tag?: ?string,
@@ -198,6 +212,9 @@ type GetStuffQueryVariables = {
     offset?: ?number,
   },
 };
+
+// @graphql-to-flow auto-generated
+type DeviceDirection = "FROM_DEVICE" | "TO_DEVICE";
 
 // @graphql-to-flow auto-generated
 type ChannelFieldsData = {
