@@ -4,6 +4,7 @@ const recast = require('recast')
 const {lowerFirst} = require('lodash')
 const addImports = require('./addImports')
 const pathToMuiTheme = require('./pathToMuiTheme')
+const closestProgramStatement = require('./closestProgramStatement')
 
 module.exports = function addStylesToComponent(root, file, filter = () => true) {
   const {createStyled} = addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`, {commonjs: true})
@@ -18,9 +19,7 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
 
   const componentName = componentDeclarator.nodes()[0].id.name
 
-  let declaration = componentDeclarator.nodes()[0].type === 'ClassDeclaration'
-    ? componentDeclarator
-    : componentDeclarator.closest(j.VariableDeclaration)
+  const declaration = closestProgramStatement(componentDeclarator)
 
   declaration.insertBefore(
     `const ${lowerFirst(componentName)}Styles = (theme: ${Theme}) => ({
