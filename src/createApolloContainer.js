@@ -17,12 +17,12 @@ query ${name} {
 }
 \`
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type QueryData = {
 
 }
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type QueryVariables = {
 
 }

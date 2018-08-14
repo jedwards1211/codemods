@@ -26,8 +26,13 @@ query ${name} {
 }
 \`
 
-// auto-generated from GraphQL
+// @graphql-to-flow auto-generated
 type ${name}QueryData = {
+
+}
+
+// @graphql-to-flow auto-generated
+type ${name}QueryVariables = {
 
 }
 
@@ -39,7 +44,7 @@ const ${name} = (props: ${name}Props) => (
     query={${name}Query}
     errorPolicy="all"
   >
-    {${queryBoilerplate}({loading, data}: ${DefinedRenderProps}<${name}QueryData>) => (
+    {${queryBoilerplate}(({loading, data}: ${DefinedRenderProps}<${name}QueryData, ${name}QueryVariables>) => (
 
     ))}
   </${Query}>
