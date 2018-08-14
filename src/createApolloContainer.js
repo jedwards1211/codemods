@@ -22,6 +22,11 @@ type QueryData = {
 
 }
 
+// auto-generated from GraphQL
+type QueryVariables = {
+
+}
+
 export type Props = {
 }
 
@@ -30,7 +35,7 @@ const ${name} = (props: Props) => (
     query={query}
     errorPolicy="all"
   >
-    {queryBoilerplate({loading, data}: DefinedRenderProps<QueryData>) => (
+    {queryBoilerplate({loading, data}: DefinedRenderProps<QueryData, QueryVariables>) => (
 
     ))}
   </Query>

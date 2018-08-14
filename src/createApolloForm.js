@@ -64,7 +64,7 @@ type Data = {
   +values: Values,
 }
 
-const ConnectedForm = reduxForm({form: formName})(ApolloForm)
+const ${name}Renderer = reduxForm({form: formName})(ApolloForm)
 
 export type Props = {
 }
@@ -74,7 +74,7 @@ const ${name} = (props: Props): React.Node => (
     {(update${type}: Update${type}) => (
       <Query query={query} fetchPolicy="network-only">
         {queryBoilerplate({what: ${JSON.stringify(startCase(type))}})(({data}) => (
-          <ConnectedForm
+          <${name}Renderer
             component={${component}}
             data={data}
             onSubmit={values => update${type}({

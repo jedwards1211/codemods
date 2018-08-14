@@ -78,7 +78,7 @@ type Data = {
   +values: Values,
 }
 
-const ConnectedForm = reduxForm({form: formName})(ApolloForm)
+const TestFeatureFormContainerRenderer = reduxForm({form: formName})(ApolloForm)
 
 export type Props = {
 }
@@ -88,7 +88,7 @@ const TestFeatureFormContainer = (props: Props): React.Node => (
     {(updateContactPreferences: UpdateContactPreferences) => (
       <Query query={query} fetchPolicy="network-only">
         {queryBoilerplate({what: "Contact Preferences"})(({data}) => (
-          <ConnectedForm
+          <TestFeatureFormContainerRenderer
             component={TestFeatureForm}
             data={data}
             onSubmit={values => updateContactPreferences({
