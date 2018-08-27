@@ -227,7 +227,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       stdout.indexOf('__BEGIN_GRAPHQL_QUERIES__') + '__BEGIN_GRAPHQL_QUERIES__'.length,
       stdout.indexOf('__END_GRAPHQL_QUERIES__')
     )
-    evaluatedQueries = JSON.parse(jsonPart)
+    return JSON.parse(jsonPart)
   }
 
   function isStale(path) {
