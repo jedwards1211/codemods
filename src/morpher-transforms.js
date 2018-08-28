@@ -629,5 +629,19 @@ updatedAt: Date;`,
         return {text: root.toSource()}
       },
     },
+    {
+      name: 'fix-apollo-update-fn',
+      description: 'TEMP, fix apollo update function',
+      onSelected: ({text, selection}) => {
+        const j = require('jscodeshift').withParser('babylon')
+        const root = j(text)
+        require('./fixApolloUpdateFn')({
+          root,
+          file: activeFile(),
+          filter: pathInRange(text, selection),
+        })
+        return {text: root.toSource()}
+      },
+    },
   ]
 }
