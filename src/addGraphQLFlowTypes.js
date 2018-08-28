@@ -128,19 +128,20 @@ module.exports = async function addGraphQLFlowTypes(options) {
         if (!queryAttr.size()) return
 
         const variablesAttr = j(path).find(j.JSXAttribute, {name: {name: 'variables'}}).at(0)
-        const variablesValue = variablesAttr.find(j.JSXExpressionContainer).get('expression')
-        const {variables} = onlyValue(generatedTypes.query) || {}
-        if (!variables) return
-        if (variablesValue.value.type === 'ObjectExpression') {
-          variablesValue.replace(j.typeCastExpression(
-            variablesValue.value,
-            j.typeAnnotation(
-              j.genericTypeAnnotation(
-                j.identifier(variables.id.name),
-                null
+        if (variablesAttr.size()) {
+          const variablesValue = variablesAttr.find(j.JSXExpressionContainer).get('expression')
+          const {variables} = onlyValue(generatedTypes.query) || {}
+          if (variables && variablesValue.value.type === 'ObjectExpression') {
+            variablesValue.replace(j.typeCastExpression(
+              variablesValue.value,
+              j.typeAnnotation(
+                j.genericTypeAnnotation(
+                  j.identifier(variables.id.name),
+                  null
+                )
               )
-            )
-          ))
+            ))
+          }
         }
 
         const elementPath = path.parentPath
@@ -256,7 +257,10 @@ function getChildFunction(elementPath) {
     path.parentPath && path.parentPath.parentPath.node === elementPath.node
   ).at(0)
   if (childFunctionContainer.size()) {
-    return childFunctionContainer.get('expression')
+    if (childFunctionContainer.get('expression', 'params').value) {
+      return childFunctionContainer.get('expression')
+    }
+    return null
   }
   return null
 }
