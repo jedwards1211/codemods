@@ -35,7 +35,7 @@ function addBelongsToManyAssociation({root, position, target, through, primaryKe
     'BelongsToManyRemoveOne',
     'BelongsToManyRemoveMany',
     'BelongsToManyHasOne',
-    'BelongsToManyBelongsToMany',
+    'BelongsToManyHasMany',
     'BelongsToManyCount',
   ], 'sequelize')
 
@@ -44,6 +44,7 @@ function addBelongsToManyAssociation({root, position, target, through, primaryKe
     `${target}Attributes`,
     `${target}InitAttributes`,
   ], `./${target}`)
+  ensureDefaultImport(root, 'value', through, `./${through}`)
   ensureImports(root, 'type', [
     `${through}Attributes`,
     `${through}ThroughInitAttributes`,
