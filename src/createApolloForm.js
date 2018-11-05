@@ -23,7 +23,6 @@ module.exports = function createApolloForm({file, name, component, type, primary
 
 import * as React from 'react'
 import pick from 'lodash/pick'
-// $FlowFixMe
 import {Query, Mutation} from 'react-apollo'
 import gql from 'graphql-tag'
 import type {FormProps} from 'redux-form'
@@ -73,18 +72,21 @@ const ${name} = (props: Props): React.Node => (
   <Mutation mutation={mutation}>
     {(update${type}: Update${type}) => (
       <Query query={query} fetchPolicy="network-only">
-        {queryBoilerplate({what: ${JSON.stringify(startCase(type))}})(({data}) => (
-          <${name}Renderer
-            component={${component}}
-            data={data}
-            onSubmit={values => update${type}({
-              variables: {
-                ${primaryKeys ? primaryKeys.properties.map(({key: {name}}) => name).join(',\n                ') + ',' : ''}
-                values: pick(values, submitValues),
-              },
-            })}
-          />
-        ))}
+        {queryBoilerplate(
+          ({data}) => (
+            <${name}Renderer
+              component={${component}}
+              values={data.values}
+              onSubmit={values => update${type}({
+                variables: {
+                  ${primaryKeys ? primaryKeys.properties.map(({key: {name}}) => name).join(',\n                ') + ',' : ''}
+                  values: pick(values, submitValues),
+                },
+              })}
+            />
+          ),
+          {what: ${JSON.stringify(startCase(type))}}
+        )}
       </Query>
     )}
   </Mutation>

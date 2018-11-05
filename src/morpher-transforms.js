@@ -643,5 +643,27 @@ updatedAt: Date;`,
         return {text: root.toSource()}
       },
     },
+    {
+      name: 'autoimports',
+      description: 'automatically add imports',
+      onSelected: async ({text, selection}) => {
+        const root = await require('./autoimports')({
+          file: activeFile(),
+          text,
+        })
+        return {text: root.toSource()}
+      },
+    },
+    {
+      name: 'action-creator',
+      description: 'Redux action creator',
+      variables: {
+        name: {label: 'action name'},
+      },
+      onSelected: ({variableValues: {name}}) => {
+        if (!name) throw new Error('You must select a name for the action')
+        return {selectedText: require('./createActionCreator')(name)}
+      },
+    },
   ]
 }
