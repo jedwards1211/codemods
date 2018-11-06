@@ -6,7 +6,7 @@ const getSuggestedImports = require('./getSuggestedImports')
 const addImports = require('./addImports')
 const findRoot = require('find-root')
 const path = require('path')
-const glob = require('es6-promisify')(require('glob'))
+const glob = require('glob-gitignore')
 
 module.exports = async function autoimports({
   file,
