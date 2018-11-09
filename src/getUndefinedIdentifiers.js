@@ -21,12 +21,16 @@ module.exports = async function getUndefinedIdentifiers({file, text}) {
   const stdout = chunks.join('')
 
   const {errors} = JSON.parse(stdout)
-  const result = new Set()
+  const found = new Set()
+  const result = []
   errors.forEach(error => {
     for (let {descr} of error.message) {
       const match = unresolvedPattern.exec(descr)
       if (!match) continue
-      result.add(match[1])
+      if (!found.has(match[1])) {
+        found.add(match[1])
+        result.push({identifier: match[1]})
+      }
     }
   })
   return result

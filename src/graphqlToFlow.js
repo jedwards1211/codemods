@@ -245,7 +245,7 @@ module.exports = async function graphqlToFlow({
   function convertListType(type, selectionSet) {
     return j.genericTypeAnnotation(
       j.identifier('Array'),
-      j.typeParameterInstantiation([innerConvertType(type.ofType, selectionSet)])
+      j.typeParameterInstantiation([convertType(type.ofType, selectionSet)])
     )
   }
 

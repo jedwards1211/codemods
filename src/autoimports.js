@@ -6,7 +6,7 @@ const getSuggestedImports = require('./getSuggestedImports')
 const addImports = require('./addImports')
 const findRoot = require('find-root')
 const path = require('path')
-const glob = require('glob-gitignore')
+const {glob} = require('glob-gitignore')
 
 module.exports = async function autoimports({
   file,
@@ -17,11 +17,11 @@ module.exports = async function autoimports({
   if (!text) text = await fs.readFile(file, 'utf8')
 
   const config = await getSuggestedImports(file)
-  const identifiers = await getUndefinedIdentifiers({file, text})
+  const undefinedIdentifiers = await getUndefinedIdentifiers({file, text})
 
   if (!root) root = j(text)
 
-  for (let identifier of identifiers) {
+  for (let {identifier} of undefinedIdentifiers) {
     const suggested = config.suggestedImports.get(identifier)
     if (Array.isArray(suggested)) {
       addImports(root, suggested[0], {commonjs: true})
