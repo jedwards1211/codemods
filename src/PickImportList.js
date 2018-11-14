@@ -1,3 +1,5 @@
+/* global atom */
+
 const { SelectListView, TextEditorView } = require("atom-space-pen-views")
 
 module.exports = class PickImportList extends SelectListView {

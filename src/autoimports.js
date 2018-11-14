@@ -1,8 +1,5 @@
 const fs = require('fs-extra')
 const j = require('jscodeshift').withParser('babylon')
-const recast = require('recast')
-const getUndefinedIdentifiers = require('./getUndefinedIdentifiers')
-const getSuggestedImports = require('./getSuggestedImports')
 const addImports = require('./addImports')
 const Client = require('dude-wheres-my-module/Client').default
 const findRoot = require('find-root')
@@ -17,20 +14,13 @@ module.exports = async function autoimports({
 }) {
   if (!text) text = await fs.readFile(file, 'utf8')
 
-  const config = await getSuggestedImports(file)
-  const undefinedIdentifiers = await getUndefinedIdentifiers({file, text})
   const client = new Client(findRoot(file))
 
   if (!root) root = j(text)
-  for (let undefinedIdentifier of undefinedIdentifiers) {
-    const {identifier} = undefinedIdentifier
+  const suggestions = await client.getSuggestedImports({code: text, file})
+  for (let key in suggestions) {
+    const {identifier, start, context, suggested} = suggestions[key]
     try {
-      const suggested = (config.suggestedImports.get(identifier) || []).map(
-        ast => ({ code: recast.print(ast), ast })
-      )
-      if (suggested.length !== 1) {
-        suggested.push(...await client.getSuggestedImports({file, identifier}))
-      }
       if (!suggested.length) {
         continue
       } else if (suggested.length === 1) {
@@ -38,7 +28,7 @@ module.exports = async function autoimports({
       } else {
         const selected = await new Promise((resolve, reject) => {
           try {
-            pickImportList.setContext(undefinedIdentifier)
+            pickImportList.setContext({identifier, line: start.line, context})
             pickImportList.setImports(suggested)
             pickImportList.setOnSelected(resolve)
             pickImportList.open()

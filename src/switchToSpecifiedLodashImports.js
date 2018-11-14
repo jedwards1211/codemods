@@ -26,3 +26,5 @@ module.exports = function switchToSpecifiedLodashImports(fileInfo, api) {
   }
   return root.toSource()
 }
+
+module.exports.parser = 'babylon'
