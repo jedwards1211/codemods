@@ -3,7 +3,10 @@ const identifierFromFile = require('./identifierFromFile')
 
 function createMaterialUIFSC(file) {
   const name = identifierFromFile(file)
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 
 import * as React from 'react'
 import createStyled from 'material-ui-render-props-styles'

@@ -1,5 +1,8 @@
 function createSequelizeModel({name, attributes, initAttributes}) {
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 /* @flow-runtime enable */
 
 import Sequelize, {Model} from 'sequelize'

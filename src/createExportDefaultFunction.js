@@ -1,7 +1,10 @@
 const identifierFromFile = require('./identifierFromFile')
 
 function createExportDefaultFunction(file) {
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 
 export default function ${identifierFromFile(file)}() {
 

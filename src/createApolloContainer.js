@@ -3,7 +3,10 @@ const pathInProject = require('./pathInProject')
 function createApolloContainer({name, file}) {
   const queryBoilerplatePath = pathInProject(file, 'src', 'universal', 'components', 'queryBoilerplate')
 
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 
 import * as React from 'react'
 import gql from 'graphql-tag'

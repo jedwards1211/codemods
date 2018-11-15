@@ -19,7 +19,10 @@ module.exports = function createApolloForm({file, name, component, type, primary
     ? primaryKeys.properties.map(({key: {name}}) => `${name}: $${name}`).join(', ')
     : ''
 
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 
 import * as React from 'react'
 import pick from 'lodash/pick'

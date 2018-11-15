@@ -1,5 +1,8 @@
 function createSequelizeJoinModel({name, attributes, initAttributes, throughInitAttributes}) {
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 /* @flow-runtime enable */
 
 import Sequelize, {Model} from 'sequelize'

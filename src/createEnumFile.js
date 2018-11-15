@@ -17,8 +17,14 @@ module.exports = function createEnumFile(file, inputText) {
   }
 
   return `
-// @flow
-// @flow-runtime enable
+/**
+ * @flow
+ * @prettier
+ */
+/**
+ * @flow
+ * @prettier
+ */-runtime enable
 
 export const attributes = {
   ${map(constants, (value, key) => `${value}: {value: ${value}, displayText: ${JSON.stringify(startCase(lowerCase(key)))}},`).join('\n  ')}

@@ -2,7 +2,10 @@ const identifierFromFile = require('./identifierFromFile')
 
 function createFSC(file) {
   const name = identifierFromFile(file)
-  return `// @flow
+  return `/**
+ * @flow
+ * @prettier
+ */
 
 import * as React from 'react'
 
