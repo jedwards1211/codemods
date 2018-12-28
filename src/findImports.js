@@ -26,7 +26,8 @@ module.exports = function findImports(root, statement, options = {}) {
     }
     const declarator = statement.declarations[0]
     const {init} = declarator
-    if (init.type !== 'CallExpression' ||
+    if (!init ||
+        init.type !== 'CallExpression' ||
         init.callee.name !== 'require') {
       throw new Error('statement must be an import or require')
     }
@@ -42,6 +43,7 @@ module.exports = function findImports(root, statement, options = {}) {
     if (node.type !== 'VariableDeclaration') return
     for (let declarator of node.declarations) {
       const {id, init} = declarator
+      if (!init) continue
       if (
         init.type === 'CallExpression' &&
         init.callee.name === 'require' &&
