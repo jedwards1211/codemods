@@ -15,6 +15,11 @@ module.exports = async function autoimports({
   if (!text) text = await fs.readFile(file, 'utf8')
 
   const client = new Client(findRoot(file))
+  client.on('progress', ({completed, total}) => pickImportList.setProgress({
+    completed,
+    total,
+  }))
+  pickImportList.open()
 
   if (!root) root = j(text)
   const suggestions = await client.getSuggestedImports({code: text, file})
@@ -31,7 +36,6 @@ module.exports = async function autoimports({
             pickImportList.setContext({identifier, line: start.line, context})
             pickImportList.setImports(suggested)
             pickImportList.setOnSelected(resolve)
-            pickImportList.open()
           } catch (error) {
             reject(error)
           }

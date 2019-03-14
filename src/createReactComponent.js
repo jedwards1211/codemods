@@ -13,7 +13,7 @@ export type Props = {
 }
 
 export default class ${name} extends React.Component<Props> {
-  render(): ?React.Node {
+  render(): React.Node {
   }
 }
 `

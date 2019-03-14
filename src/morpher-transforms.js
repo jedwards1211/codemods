@@ -201,6 +201,20 @@ module.exports = function () {
       })
     },
     {
+      name: 'ufsc',
+      description: 'Untyped React Functional Stateless component',
+      onSelected: () => ({
+        text: require('./createUntypedFSC')(activeFile()),
+      })
+    },
+    {
+      name: 'ufsc-with-styles',
+      description: 'Untyped React Functional Stateless component with styles',
+      onSelected: () => ({
+        text: require('./createUntypedFSCWithStyles')(activeFile()),
+      })
+    },
+    {
       name: 'ifsc',
       description: 'inline React Functional Stateless component',
       variables: {
@@ -216,6 +230,13 @@ module.exports = function () {
       description: 'React Component',
       onSelected: () => ({
         text: require('./createReactComponent')(activeFile()),
+      })
+    },
+    {
+      name: 'ucomp',
+      description: 'Untyped React Component',
+      onSelected: () => ({
+        text: require('./createUntypedReactComponent')(activeFile()),
       })
     },
     {

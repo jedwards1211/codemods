@@ -51,16 +51,24 @@ module.exports = class PickImportList extends SelectListView {
     `
   }
 
-  getEmptyMessage() {
-    return "No transforms defined. Run 'morpher:open-your-transforms-file' to define some"
-  }
-
   setContext({identifier, line, context}) {
     this.identifierArea.text(identifier)
     this.contextArea.text(`${line} | ${context}`)
   }
 
+  setProgress(progress) {
+    if (!progress) {
+      this.loadingArea.text('')
+      return
+    }
+    const {completed, total} = progress
+    this.loadingArea.text(`Server is starting... ${completed}/${total} (${Math.floor(
+      (completed * 100) / total
+    )}%)`)
+  }
+
   setImports(imports) {
+    this.loadingArea.text('')
     this.setItems(
       imports.map(imp =>
         Object.assign({}, imp, {
