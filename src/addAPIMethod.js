@@ -12,6 +12,7 @@ module.exports = function addAPIMethod(root, position, name) {
   const {Type} = addImports(root, statement`import type {Type} from 'flow-runtime'`)
 
   const {assert} = addImports(root, statement`import {assert} from './APIError'`)
+  const {APIContext} = addImports(root, statement`import APIContext from './APIContext'`)
 
   const lower = lowerFirst(name)
   const upper = upperFirst(name)
@@ -20,7 +21,7 @@ module.exports = function addAPIMethod(root, position, name) {
     root,
     position,
     statement([`export type ${upper}Options = {
-  +actorId: number,
+  +apiContext: ${APIContext}<any>,
 }
 
 `]),
@@ -29,7 +30,7 @@ module.exports = function addAPIMethod(root, position, name) {
 `]),
     statement([`export async function assertCan${upper}(options: ${upper}Options): Promise<void> {
   ${assert}(${upper}OptionsType, options)
-  const {actorId} = options
+  const {apiContext} = options
 }
 
 `]),
