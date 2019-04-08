@@ -184,7 +184,7 @@ module.exports = async function graphqlToFlow({
   }
 
   function convertField(field, type) {
-    let {name, alias, selectionSet} = field
+    let {name, alias, selectionSet, directives} = field
     let typeValue
     if (name.value === '__typename') typeValue = j.stringTypeAnnotation()
     else if (selectionSet) {
@@ -194,6 +194,17 @@ module.exports = async function graphqlToFlow({
     } else {
       const innerType = getInnerType(type)
       typeValue = convertType(innerType.fields[name.value].type)
+    }
+    if (directives) {
+      for (let directive of directives) {
+        const {name: {value: name}} = directive
+        if (name === 'include' || name === 'skip') {
+          if (typeValue.type !== 'NullableTypeAnnotation') {
+            typeValue = j.nullableTypeAnnotation(typeValue)
+          }
+          break
+        }
+      }
     }
     return j.objectTypeProperty(
       j.identifier((alias || name).value),
