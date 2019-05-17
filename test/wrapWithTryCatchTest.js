@@ -3,10 +3,8 @@
 import {describe, it} from 'mocha'
 import {expect} from 'chai'
 
-const j = require('jscodeshift').withParser('babylon')
-
-import wrapWithTryCatch from '../src/wrapWithTryCatch'
-import pathsToTransformFilter from '../src/pathsToTransformFilter'
+import wrapWithTryCatch from '../src/morpher-transforms/wrapWithTryCatch'
+import morpherUtils from './test-morpher-utils'
 
 describe(`wrapWithTryCatch`, function () {
   it(`works for children`, function () {
@@ -19,17 +17,16 @@ if (foo) {
 const baz = 'baz'
 const qux = 'qux'
 `
-    const root = j(code)
 
-    wrapWithTryCatch({
-      root,
-      filter: pathsToTransformFilter(
-        code.indexOf('const bar'),
-        code.indexOf('const qux')
-      ),
+    const {text: transformed} = morpherUtils({activeFile: 'foo.js'}).apply(wrapWithTryCatch, {
+      text: code,
+      selection: {
+        start: {row: 2, column: 0},
+        end: {row: 7, column: 0},
+      },
     })
 
-    expect(root.toSource()).to.equal(`
+    expect(transformed).to.equal(`
 const foo = 'foo'
 
 try {

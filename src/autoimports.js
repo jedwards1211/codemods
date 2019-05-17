@@ -21,6 +21,7 @@ module.exports = async function autoimports({
   }))
   pickImportList.open()
 
+  let first = true
   if (!root) root = j(text)
   const suggestions = await client.getSuggestedImports({code: text, file})
   for (let key in suggestions) {
@@ -36,6 +37,7 @@ module.exports = async function autoimports({
             pickImportList.setContext({identifier, line: start.line, context})
             pickImportList.setImports(suggested)
             pickImportList.setOnSelected(resolve)
+            if (!first) pickImportList.open()
           } catch (error) {
             reject(error)
           }
@@ -47,6 +49,7 @@ module.exports = async function autoimports({
     } catch (error) {
       console.error(error.stack) // eslint-disable-line no-console
     }
+    first = false
   }
 
   return root

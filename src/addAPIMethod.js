@@ -6,7 +6,7 @@ const insertLeadingComment = require('./insertLeadingComment')
 
 const {statement} = j.template
 
-module.exports = function addAPIMethod(root, position, name) {
+module.exports = function addAPIMethod(root, position, {name, options, result, appContextType}) {
   insertLeadingComment(root, ' @flow-runtime enable')
   const {reify} = addImports(root, statement`import {reify} from 'flow-runtime'`)
   const {Type} = addImports(root, statement`import type {Type} from 'flow-runtime'`)
@@ -21,21 +21,22 @@ module.exports = function addAPIMethod(root, position, name) {
     root,
     position,
     statement([`export type ${upper}Options = {
-  +apiContext: ${APIContext}<any>,
+  +apiContext: ${APIContext}<${appContextType || 'any'}>,
+  ${options || ''}
+}
+
+`]),
+    statement([`export type ${upper}Result = {
+  ${result || ''}
 }
 
 `]),
     statement([`export const ${upper}OptionsType = (${reify}: ${Type}<${upper}Options>)
 
 `]),
-    statement([`export async function assertCan${upper}(options: ${upper}Options): Promise<void> {
+    statement([`export async function ${lower}(options: ${upper}Options): Promise<${upper}Result> {
   ${assert}(${upper}OptionsType, options)
   const {apiContext} = options
-}
-
-`]),
-    statement([`export async function ${lower}(options: ${upper}Options): Promise<RETURN_TYPE> {
-  await assertCan${upper}(options)
 }
 
 `])

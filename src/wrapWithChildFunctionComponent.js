@@ -19,7 +19,7 @@ ${recast.print(path.node).toString().replace(/^/gm, '    ')}
   } else {
     element.replaceWith(path => `(
   <${name}>
-    {(${props}) => (
+    {(${props}): React.Node => (
 ${recast.print(path.node).toString().replace(/^/gm, '      ')}
     )}
   </${name}>
