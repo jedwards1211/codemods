@@ -43,7 +43,7 @@ module.exports = async function autoimports({
           }
         })
         if (selected) {
-          addImports(root, selected.ast, {commonjs: true})
+          addImports(root, selected.ast)
         }
       }
     } catch (error) {

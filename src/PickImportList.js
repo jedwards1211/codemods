@@ -2,6 +2,17 @@
 
 const { SelectListView, TextEditorView } = require("atom-space-pen-views")
 
+function getSource(ast) {
+  if (ast.source) return ast.source.value
+  if (ast.declarations) {
+    const declaration = ast.declarations[0]
+    if (declaration && declaration.init.type === 'CallExpression') {
+      return declaration.init.arguments[0].value
+    }
+  }
+  return '?'
+}
+
 module.exports = class PickImportList extends SelectListView {
   static content() {
     return this.div({
@@ -45,7 +56,7 @@ module.exports = class PickImportList extends SelectListView {
   viewForItem({ code, ast }) {
     return `
       <li class="two-lines">
-        <div class="primary-line">${ast.source.value}</div>
+        <div class="primary-line">${getSource(ast)}</div>
         <div class="secondary-line">${code}</div>
       </li>
     `
@@ -72,7 +83,7 @@ module.exports = class PickImportList extends SelectListView {
     this.setItems(
       imports.map(imp =>
         Object.assign({}, imp, {
-          filterKey: `${imp.ast.source.value}`
+          filterKey: `${getSource(imp.ast)}`
         })
       )
     )

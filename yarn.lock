@@ -5401,10 +5401,25 @@ jsbn@~0.1.0:
   resolved "https://registry.npmjs.org/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
   integrity sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
 
+jscodeshift-add-imports@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/jscodeshift-add-imports/-/jscodeshift-add-imports-1.0.0.tgz#5026a4874242ebedf9bdf7a5cc515f46f9626dd3"
+  integrity sha512-791KAXouC6U6qqrwXzh4tFkjOqyRxIPsOYHJyK1gVtRZ/bd4roKO4X7nhyPH4PYlQaVKi+iTi8uBkjBA0d7W4w==
+  dependencies:
+    "@babel/traverse" "^7.4.5"
+    jscodeshift-find-imports "^1.0.2"
+
 jscodeshift-find-imports@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/jscodeshift-find-imports/-/jscodeshift-find-imports-1.0.1.tgz#c4def37b53d93b86e535cc1c338bf58e8cb21b32"
   integrity sha512-UX7TzZIQ1Fj4D/wDmlYWG3fjGq2b+Le4ElJfJ9Rf03bc9Qz1paG1JfpHSDpYnVh3A1HWOkdjOUNMMk7PFDrjOg==
+  dependencies:
+    jscodeshift "^0.6.4"
+
+jscodeshift-find-imports@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/jscodeshift-find-imports/-/jscodeshift-find-imports-1.0.2.tgz#27c36ecc5f7572829164bab5092c24ee07ff8ef5"
+  integrity sha512-O6lbEWWjL/mwwxNcwy/ea2X6YCqE5OhaqTPy2rBRkWJGD/ESXYNoLL7En/LXwe4IbJQOcaMbGIGOGzmxIGR5xQ==
   dependencies:
     jscodeshift "^0.6.4"
 
