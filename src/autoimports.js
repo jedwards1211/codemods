@@ -23,7 +23,7 @@ module.exports = async function autoimports({
 
   let first = true
   if (!root) root = j(text)
-  const suggestions = await client.getSuggestedImports({code: text, file})
+  const suggestions = await client.suggest({code: text, file})
   for (let key in suggestions) {
     const {identifier, start, context, suggested} = suggestions[key]
     try {

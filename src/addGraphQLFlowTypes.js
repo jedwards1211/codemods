@@ -96,10 +96,8 @@ module.exports = async function addGraphQLFlowTypes(options) {
       extractTypes
     })
     for (let type of types) {
-      const comment = j.commentLine(AUTO_GENERATED_COMMENT)
-      comment.leading = true
       if (!type.comments) type.comments = []
-      type.comments.push(comment)
+      type.comments.push(j.commentLine(AUTO_GENERATED_COMMENT))
       const {id: {name}} = type
       const existing = root.find(j.TypeAlias, {id: {name}})
       let parent = j(path).closest(j.ExportNamedDeclaration)
@@ -219,7 +217,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       tempFileWritten = true
       await fs.writeFile(tempFile, tempRoot.toSource(), 'utf8')
 
-      const babelNode = require('path').resolve(findRoot(__dirname), 'node_modules', '.bin', 'babel-node');
+      const babelNode = require('path').resolve(findRoot(file), 'node_modules', '.bin', 'babel-node');
       ({stdout} = await execFile(babelNode, [tempFile], {cwd: findRoot(file), encoding: 'utf8'}))
     } finally {
       if (tempFileWritten) await fs.remove(tempFile)
@@ -242,6 +240,21 @@ module.exports = async function addGraphQLFlowTypes(options) {
 
   root.find(j.TypeAlias).filter(isStale).remove()
   root.find(j.ExportNamedDeclaration).filter(isStale).remove()
+
+  const {body} = root.find(j.Program).paths()[0].node
+  let prev
+  for (const next of body) {
+    if (!addedStatements.has(prev) && addedStatements.has(next)) {
+      if (!next.comments) next.comments = []
+      next.comments.push(j.commentBlock(' eslint-disable no-unused-vars '))
+    } else if (addedStatements.has(prev) && !addedStatements.has(next)) {
+      if (!next.comments) next.comments = []
+      if (!next.comments.find(comment => comment.value.trim() === 'eslint-enable no-unused-vars')) {
+        next.comments.push(j.commentBlock(' eslint-enable no-unused-vars '))
+      }
+    }
+    prev = next
+  }
 
   return root
 }

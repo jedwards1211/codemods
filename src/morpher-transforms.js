@@ -441,7 +441,8 @@ updatedAt: Date;`,
       variables: {
         name: { label: "Name", defaultValue: identifierFromFile(activeFile()) },
         options: { label: "Input Options", multiline: true },
-        result: { label: "Result Properties", multiline: true },
+        returnType: { label: "Return Type" },
+        result: { label: "Result Properties (if no Return Type)", multiline: true },
         appContextType: { label: "AppContext type(s)" }
       },
       onSelected: jscodeshiftTransform(
@@ -451,7 +452,7 @@ updatedAt: Date;`,
           const position = activeBuffer().characterIndexForPosition(
             selection.start
           )
-          require("./addAPIMethod")(root, position, variableValues)
+          require("./addAPIMethod")(root, position, {...variableValues, file: activeFile()})
         }
       )
     },
@@ -459,15 +460,16 @@ updatedAt: Date;`,
       name: "find-one-api-method",
       description: "add findOne API method",
       variables: {
-        name: { label: "Name", defaultValue: identifierFromFile(activeFile()) }
+        name: { label: "Name", defaultValue: identifierFromFile(activeFile()) },
+        appContextType: { label: "AppContext type(s)" },
       },
       onSelected: jscodeshiftTransform(
-        ({ text, selection, variableValues: { name }, root }) => {
+        ({ text, selection, variableValues: { name, appContextType }, root }) => {
           if (!name) throw new Error("You must select a name for the method")
           const position = activeBuffer().characterIndexForPosition(
             selection.start
           )
-          require("./addFindOneAPIMethod")(root, position, name)
+          require("./addFindOneAPIMethod")(root, position, { modelName: name, appContextType, file: activeFile() })
         }
       )
     },
@@ -475,15 +477,16 @@ updatedAt: Date;`,
       name: "find-all-api-method",
       description: "add findAll API method",
       variables: {
-        name: { label: "Name", defaultValue: identifierFromFile(activeFile()) }
+        name: { label: "Name", defaultValue: identifierFromFile(activeFile()) },
+        appContextType: { label: "AppContext type(s)" },
       },
       onSelected: jscodeshiftTransform(
-        ({ text, selection, variableValues: { name }, root }) => {
+        ({ text, selection, variableValues: { name, appContextType }, root }) => {
           if (!name) throw new Error("You must select a name for the method")
           const position = activeBuffer().characterIndexForPosition(
             selection.start
           )
-          require("./addFindAllAPIMethod")(root, position, name)
+          require("./addFindAllAPIMethod")(root, position, { modelName: name, appContextType, file: activeFile() })
         }
       )
     },

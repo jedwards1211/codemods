@@ -53,14 +53,16 @@ module.exports = function inlineClassesType(fileInfo, api) {
     ? `Obj${localName}`
     : localName
 
+  const comments = importDecl.nodes()[0].comments
+
   if (functionUsages.size()) {
     const inlineClasses = statement([`type ${fnName}<Styles> = $Call<
   <T>((any) => T) => { [$Keys<T>]: string },
   Styles
 >
 `])
-    if (!objectUsages.size() && specifiers.size() === 1) {
-      inlineClasses.comments = [...importDecl.nodes()[0].comments]
+    if (!objectUsages.size() && specifiers.size() === 1 && comments) {
+      inlineClasses.comments = [...comments]
     }
     importDecl.insertAfter(inlineClasses)
     if (fnName !== localName) {
@@ -73,8 +75,8 @@ module.exports = function inlineClassesType(fileInfo, api) {
     const inlineSimpleClasses = statement([`type ${objName}<Styles> = { [$Keys<Styles>]: string }
 
 `])
-    if (specifiers.size() === 1) {
-      inlineSimpleClasses.comments = [...importDecl.nodes()[0].comments]
+    if (specifiers.size() === 1 && comments) {
+      inlineSimpleClasses.comments = [...comments]
     }
     importDecl.insertAfter(inlineSimpleClasses)
     if (objName !== localName) {

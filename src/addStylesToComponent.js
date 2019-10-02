@@ -8,7 +8,6 @@ const closestProgramStatement = require('./closestProgramStatement')
 
 module.exports = function addStylesToComponent(root, file, filter = () => true) {
   const {createStyled} = addImports(root, statement`import createStyled from 'material-ui-render-props-styles'`, {commonjs: true})
-  const {Classes} = addImports(root, statement`import type {Classes} from 'material-ui-render-props-styles'`)
   const {Theme} = addImports(root, statement([`import type {Theme} from '${pathToMuiTheme(file)}'`]))
 
   const element = root.find(j.JSXElement).filter(filter).at(0)
@@ -21,12 +20,23 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
 
   const declaration = closestProgramStatement(componentDeclarator)
 
+  if (!root.find(j.TypeAlias, {id: {name: 'Classes'}}).size()) {
+    declaration.insertBefore(
+      statement`type Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`
+    )
+  }
+
+  const styles = root.find(j.ExportDefaultDeclaration, {declaration: {name: componentName}}).size()
+    ? 'styles'
+    : `${lowerFirst(componentName)}Styles`
+  const Styles = `${componentName}Styles`
+
   declaration.insertBefore(
-    `const ${lowerFirst(componentName)}Styles = (theme: ${Theme}) => ({
+    `const ${styles} = (theme: ${Theme}) => ({
 })`
   )
   declaration.insertBefore(
-    `const ${componentName}Styles = ${createStyled}(${lowerFirst(componentName)}Styles, {name: '${componentName}'})`
+    `const ${Styles} = ${createStyled}(${styles}, {name: '${componentName}'})`
   )
 
   const classesIdentifier = j.identifier('classes')
@@ -35,11 +45,11 @@ module.exports = function addStylesToComponent(root, file, filter = () => true) 
 
   element.replaceWith(path => {
     return `(
-  <${componentName}Styles>
-    {({classes}: {classes: ${Classes}<typeof ${lowerFirst(componentName)}Styles>}) => (
+  <${Styles}>
+    {({classes}: {classes: Classes<typeof ${styles}>}) => (
 ${recast.print(path.node).toString().replace(/^/gm, '      ')}
     )}
-  </${componentName}Styles>
+  </${Styles}>
 )`
   })
 }
