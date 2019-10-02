@@ -292,13 +292,6 @@ module.exports = function () {
       })
     },
     {
-      name: "wrapWithApolloConsumer",
-      description: "wrap JSX element with ApolloConsumer",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
-        require("./wrapWithApolloConsumer")(root, pathInRange(text, selection))
-      })
-    },
-    {
       name: "convertStringPropToTemplate",
       description: "convert a JSX string prop to a template literal",
       onSelected: jscodeshiftTransform(({ text, selection, root }) => {
@@ -362,47 +355,6 @@ updatedAt: Date;`,
       onSelected: ({ variableValues }) => ({
         text: require("./createSequelizeJoinModel")(variableValues)
       })
-    },
-    {
-      name: "apollo-form",
-      description: "Apollo Form component",
-      variables: {
-        name: {
-          label: "Component name",
-          defaultValue: identifierFromFile(activeFile())
-        },
-        component: {
-          label: "Wrapped Component name",
-          defaultValue: ""
-        },
-        type: {
-          label: "GraphQL type to edit",
-          defaultValue: ""
-        },
-        values: {
-          label: "Flow types for field values (one per line, ending with ;)",
-          defaultValue: "",
-          multiline: true
-        },
-        primaryKeys: {
-          label:
-            "Flow types for primary key variable(s) (one per line, ending with ;)",
-          defaultValue: "",
-          multiline: true
-        }
-      },
-      onSelected: ({ variableValues }) => {
-        const { values, primaryKeys } = variableValues
-        return {
-          text: require("./createApolloForm")({
-            file: activeFile(),
-            ...variableValues,
-            values: values && require("./parseObjectTypeAnnotation")(values),
-            primaryKeys:
-              primaryKeys && require("./parseObjectTypeAnnotation")(primaryKeys)
-          })
-        }
-      }
     },
     {
       name: "ienum",

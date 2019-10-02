@@ -13,24 +13,27 @@ DOWN = 'down'
 LEFT = 'left'
 RIGHT = 'right'
 `)).to.equal(`
-// @flow
+/**
+ * @flow
+ * @prettier
+ */
 // @flow-runtime enable
 
-export const Directions = {
-  UP: {value: 'up', displayText: "Up"},
-  DOWN: {value: 'down', displayText: "Down"},
-  LEFT: {value: 'left', displayText: "Left"},
-  RIGHT: {value: 'right', displayText: "Right"},
-}
-
-export type Direction = $Keys<typeof Directions>
 export const UP: Direction = 'up'
 export const DOWN: Direction = 'down'
 export const LEFT: Direction = 'left'
 export const RIGHT: Direction = 'right'
 
-export const DirectionsArray: Array<Direction> = Object.keys(Directions)
-export const DirectionsSet: Set<Direction> = new Set(DirectionsArray)
+export const attributes = {
+  [UP]: {value: UP, displayText: "Up"},
+  [DOWN]: {value: DOWN, displayText: "Down"},
+  [LEFT]: {value: LEFT, displayText: "Left"},
+  [RIGHT]: {value: RIGHT, displayText: "Right"},
+}
+export type Direction = $Keys<typeof attributes>
+
+export const values: Array<Direction> = Object.keys(attributes)
+export const valuesSet: Set<Direction> = new Set(values)
 `)
   })
   it(`works when values are not given`, function () {
@@ -40,24 +43,27 @@ DOWN
 LEFT
 RIGHT
 `)).to.equal(`
-// @flow
+/**
+ * @flow
+ * @prettier
+ */
 // @flow-runtime enable
 
-export const Directions = {
-  UP: {value: 'UP', displayText: "Up"},
-  DOWN: {value: 'DOWN', displayText: "Down"},
-  LEFT: {value: 'LEFT', displayText: "Left"},
-  RIGHT: {value: 'RIGHT', displayText: "Right"},
-}
-
-export type Direction = $Keys<typeof Directions>
 export const UP: Direction = 'UP'
 export const DOWN: Direction = 'DOWN'
 export const LEFT: Direction = 'LEFT'
 export const RIGHT: Direction = 'RIGHT'
 
-export const DirectionsArray: Array<Direction> = Object.keys(Directions)
-export const DirectionsSet: Set<Direction> = new Set(DirectionsArray)
+export const attributes = {
+  [UP]: {value: UP, displayText: "Up"},
+  [DOWN]: {value: DOWN, displayText: "Down"},
+  [LEFT]: {value: LEFT, displayText: "Left"},
+  [RIGHT]: {value: RIGHT, displayText: "Right"},
+}
+export type Direction = $Keys<typeof attributes>
+
+export const values: Array<Direction> = Object.keys(attributes)
+export const valuesSet: Set<Direction> = new Set(values)
 `)
   })
 })

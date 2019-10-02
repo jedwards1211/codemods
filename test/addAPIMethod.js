@@ -14,25 +14,24 @@ describe(`addAPIMethod`, function () {
 import { reify } from "flow-runtime";
 `
     const root = j(code)
-    addAPIMethod(root, code.length, 'CreateUser')
+    addAPIMethod(root, code.length, {file: __filename, name: 'createUser', returnType: 'User'})
     expect(root.toSource()).to.equal(`// @flow
 // @flow-runtime enable
 import { reify } from "flow-runtime";
 import type { Type } from "flow-runtime";
-import { assert } from "./APIError";
+import { assert } from "../src/server/api/APIError";
+import APIContext from "../src/server/api/APIContext";
 export type CreateUserOptions = {
-  +actorId: number,
+  +apiContext: APIContext<any>,
+  
 }
 
 export const CreateUserOptionsType = (reify: Type<CreateUserOptions>)
 
-export async function assertCanCreateUser(options: CreateUserOptions): Promise<void> {
+export async function createUser(options: CreateUserOptions): Promise<User> {
   assert(CreateUserOptionsType, options)
-  const {actorId} = options
-}
-
-export async function createUser(options: CreateUserOptions): Promise<RETURN_TYPE> {
-  await assertCanCreateUser(options)
+  const {apiContext} = options
+  const {transaction} = apiContext
 }
 `)
   })

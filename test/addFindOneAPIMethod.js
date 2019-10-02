@@ -14,27 +14,33 @@ describe(`addFindOneAPIMethod`, function () {
 import { reify } from "flow-runtime";
 `
     const root = j(code)
-    addFindOneAPIMethod(root, code.length, 'User')
+    addFindOneAPIMethod(root, code.length, {file: __filename, modelName: 'User'})
     expect(root.toSource()).to.equal(`// @flow
 // @flow-runtime enable
 import { reify } from "flow-runtime";
 import type { FindOptions } from "sequelize";
 import User from "../models/User";
 import type { Type } from "flow-runtime";
-import { assert } from "./APIError";
+import { assert } from "../src/server/api/APIError";
+import APIContext from "../src/server/api/APIContext";
 export type FindOneUserOptions = {
-  +actorId: number,
+  +apiContext: APIContext<any>,
 }
 
 export const FindOneUserOptionsType = (reify: Type<FindOneUserOptions>)
 
 export async function assertCanFindOneUser(options: FindOneUserOptions): Promise<void> {
   assert(FindOneUserOptionsType, options)
-  const {actorId} = options
+  const { apiContext } = options
 }
 
 export async function getFindOneUserQuery(options: FindOneUserOptions): Promise<FindOptions<User>> {
+  const { apiContext } = options
+  const { findOptions } = apiContext
 
+  const where = {}
+
+  return { where, ...findOptions }
 }
 
 export async function findOneUser(options: FindOneUserOptions): Promise<?User> {

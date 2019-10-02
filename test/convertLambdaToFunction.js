@@ -26,14 +26,14 @@ const baz = <T>(props: Props<T>): T => {
 (function(props) {
   return <div />;
 })
-function bar(props) {
+const bar = function(props) {
   return (
     <div>
       Foo
     </div>
   );
 };
-function baz<T>(props: Props<T>): T {
+const baz = function anonymous<T>(props: Props<T>): T {
   return props
 }
 `

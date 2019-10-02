@@ -21,17 +21,14 @@ module.exports = function createEnumFile(file, inputText) {
  * @flow
  * @prettier
  */
-/**
- * @flow
- * @prettier
- */-runtime enable
+// @flow-runtime enable
+
+${map(constants, (value, key) => `export const ${key}: ${singular} = ${value}`).join('\n')}
 
 export const attributes = {
-  ${map(constants, (value, key) => `${value}: {value: ${value}, displayText: ${JSON.stringify(startCase(lowerCase(key)))}},`).join('\n  ')}
+  ${map(constants, (value, key) => `[${key}]: {value: ${key}, displayText: ${JSON.stringify(startCase(lowerCase(key)))}},`).join('\n  ')}
 }
-
 export type ${singular} = $Keys<typeof attributes>
-${map(constants, (value, key) => `export const ${key}: ${singular} = ${value}`).join('\n')}
 
 export const values: Array<${singular}> = Object.keys(attributes)
 export const valuesSet: Set<${singular}> = new Set(values)

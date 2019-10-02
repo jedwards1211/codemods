@@ -146,6 +146,7 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 \`
 
 // @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
 type GetStuffQueryData = {
   roles: Object,
   item: ?{
@@ -158,7 +159,7 @@ type GetStuffQueryData = {
     direction: DeviceDirection1,
     Channels: {
       pageInfo: { hasNextPage: boolean },
-      edges: ?Array<{ node: MQTTDeviceChannel }>,
+      edges: ?Array<?{ node: MQTTDeviceChannel }>,
     },
     TagPrefixes: {
       id: number,
@@ -223,15 +224,17 @@ type ChannelFieldsData = {
   offset: ?number,
 };
 
+/* eslint-enable no-unused-vars */
 const mutation = gql\`
 mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
   device: createDevice(organizationId: $organizationId, value: $values) {
     id
   }
 }
-\`
+\`;
 
 // @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
 type CreateDeviceMutationFunction = MutationFunction<CreateDeviceMutationData, CreateDeviceMutationVariables>;
 
 // @graphql-to-flow auto-generated
@@ -246,6 +249,7 @@ type CreateDeviceMutationVariables = {
   },
 };
 
+/* eslint-enable no-unused-vars */
 const ViewContainer = () => (
   <Mutation mutation={mutation}>
     {(createDevice: CreateDeviceMutationFunction) => (
@@ -259,6 +263,6 @@ const ViewContainer = () => (
       </Query>
     )}
   </Mutation>
-)`)
+);`)
   })
 })
