@@ -281,17 +281,6 @@ module.exports = function () {
       }
     },
     {
-      name: "addStylesToComponent",
-      description: "add Material UI styles to a component",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
-        require("./addStylesToComponent")(
-          root,
-          activeFile(),
-          pathInRange(text, selection)
-        )
-      })
-    },
-    {
       name: "convertStringPropToTemplate",
       description: "convert a JSX string prop to a template literal",
       onSelected: jscodeshiftTransform(({ text, selection, root }) => {

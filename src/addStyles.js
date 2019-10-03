@@ -15,6 +15,16 @@ function shorthandProperty(key) {
   return prop
 }
 
+function addPropertyBeforeRestElement(pattern, property) {
+  const props = pattern.properties
+  const l = props.length
+  if (props[l - 1].type === 'RestElement') {
+    props.splice(l - 1, 0, property)
+  } else {
+    props.push(property)
+  }
+}
+
 module.exports = function addStyles(root, filter = () => true, { file }) {
   const flow = hasFlowAnnotation(root)
 
@@ -45,7 +55,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
   const propsParam = componentNode.params[0]
   if (propsParam && propsParam.type === 'ObjectPattern') {
-    propsParam.properties.push(shorthandProperty('classes'))
+    addPropertyBeforeRestElement(propsParam, shorthandProperty('classes'))
   } else if (propsParam && propsParam.type === 'Identifier') {
     const props = propsParam.name
     const destructuring = component.find(j.VariableDeclarator, {
@@ -57,7 +67,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
       },
     }).at(0)
     if (destructuring.size()) {
-      destructuring.nodes()[0].id.properties.push(shorthandProperty('classes'))
+      addPropertyBeforeRestElement(destructuring.nodes()[0].id, shorthandProperty('classes'))
     }
   }
 
@@ -107,7 +117,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
           const propsTypeAlias = root.find(j.TypeAlias, {
             id: {name: propsTypeName}
           }).filter(path => path.scope === typeScope).at(0)
-          if (propsTypeAlias.size()) afterStyles = propsTypeAlias
+          if (propsTypeAlias.size()) afterStyles = propsTypeAlias.closest(j.Statement)
           const propsType = propsTypeAlias.find(j.ObjectTypeAnnotation).at(0)
           if (propsType.size()) {
             propsType.nodes()[0].properties.push(classesPropAnnotation)
@@ -121,7 +131,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
   if (flow && !root.find(j.TypeAlias, {id: {name: 'Classes'}}).size()) {
     afterStyles.insertBefore(
-      statement`type Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`
+      `type Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`
     )
   }
 

@@ -43,7 +43,7 @@ exports.activeFile = activeFile
 
 const jscodeshiftTransform = transform => ({text, ...props}) => {
   const root = j(text)
-  transform({text, ...props, root})
+  transform({text, ...props, root, file: activeFile()})
   return {text: root.toSource()}
 }
 exports.jscodeshiftTransform = jscodeshiftTransform
