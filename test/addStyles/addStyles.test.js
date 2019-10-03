@@ -1,0 +1,26 @@
+/**
+ * @flow
+ * @prettier
+ */
+
+import {describe, it} from 'mocha'
+import {expect} from 'chai'
+import requireGlob from 'require-glob'
+import jscodeshift from 'jscodeshift'
+import addStyles from '../../src/addStyles'
+import pathsToTransformFilter from '../../src/pathsToTransformFilter'
+
+const j = jscodeshift.withParser('babylon')
+
+describe(`addStyles`, function () {
+  const fixtures = requireGlob.sync('./fixtures/*.js')
+  for (const key in fixtures) {
+    const {input, output} = fixtures[key]
+    const position = input.indexOf('// position')
+    it(key.replace(/\.js$/, ''), function () {
+      const root = j(input.replace(/^\s*\/\/\s*position.*(\r\n?|\n)/mg, ''))
+      addStyles(root, pathsToTransformFilter(position), {file: __filename})
+      expect(root.toSource().trim()).to.equal(output.trim())
+    })
+  }
+})

@@ -25,7 +25,7 @@
     "travis-deploy-once": "travis-deploy-once"
   },
   "config": {
-    "mocha": "-r babel-register ./test/**/*.js",
+    "mocha": "-r babel-register ./test/clearConsole.js ./test/*.js ./test/*/*.js",
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
