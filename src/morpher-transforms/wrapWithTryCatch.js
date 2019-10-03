@@ -9,7 +9,7 @@ module.exports = ({pathInRange}) => ({
 
     for (let group of groupByParent(statements)) {
       j(group[0]).replaceWith(`try {
-${group.map(path => recast.print(path.node).toString()).join('\n').replace(/^/gm, '  ')}
+${group.map(path => recast.print(path).toString()).join('\n').replace(/^/gm, '  ')}
 } catch (error) {
 }`)
       for (let i = 1, end = group.length; i < end; i++) {

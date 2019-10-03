@@ -18,13 +18,13 @@ module.exports = function wrapWithJSXElement({
   for (let group of groupByParent(elements)) {
     if (isChildJSXElement(group[0])) {
       j(group[0]).replaceWith(`<${name}>
-  ${group.map(path => recast.print(path.node).toString()).join('').trim()}
+  ${group.map(path => recast.print(path).toString()).join('').trim()}
 </${name}>
 `)
     } else {
       j(group[0]).replaceWith(`(
   <${name}>
-${group.map(path => recast.print(path.node).toString()).join('').trim().replace(/^/gm, '    ')}
+${group.map(path => recast.print(path).toString()).join('').trim().replace(/^/gm, '    ')}
   </${name}>
 )`)
     }
