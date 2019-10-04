@@ -23,8 +23,10 @@ export const output = `
  */
 
 import * as React from 'react'
+
 import { withStyles } from "@material-ui/core/styles";
 import { type Theme } from "../../src/universal/theme";
+
 type Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>
 
 const styles = (theme: Theme) => ({
@@ -34,8 +36,8 @@ const styles = (theme: Theme) => ({
 export type Props = { +classes: Classes<typeof styles> }
 
 const Temp = ({
-  text,
-  classes
+ text,
+ classes
 }: Props): React.Node => (
   <div />
 )

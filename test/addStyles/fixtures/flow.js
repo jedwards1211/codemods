@@ -13,7 +13,6 @@ const Test = ({text}: Props): React.Node => (
 
 export const output = `
 // @flow
-
 import { withStyles } from "@material-ui/core/styles";
 
 import { type Theme } from "../../src/universal/theme";

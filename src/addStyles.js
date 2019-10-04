@@ -117,7 +117,10 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
           const propsTypeAlias = root.find(j.TypeAlias, {
             id: {name: propsTypeName}
           }).filter(path => path.scope === typeScope).at(0)
-          if (propsTypeAlias.size()) afterStyles = propsTypeAlias.closest(j.Statement)
+          if (propsTypeAlias.size()) {
+            const exportDecl = propsTypeAlias.closest(j.ExportNamedDeclaration)
+            afterStyles = exportDecl.size() ? exportDecl : propsTypeAlias
+          }
           const propsType = propsTypeAlias.find(j.ObjectTypeAnnotation).at(0)
           if (propsType.size()) {
             propsType.nodes()[0].properties.push(classesPropAnnotation)
@@ -131,7 +134,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
   if (flow && !root.find(j.TypeAlias, {id: {name: 'Classes'}}).size()) {
     afterStyles.insertBefore(
-      `type Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`
+      statement([`\n\ntype Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`])
     )
   }
 
@@ -140,7 +143,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
 })\n\n`]))
   if (exportNamedDeclaration.size()) {
-    declaration.insertAfter(statement([`\n\nexport { ${componentName}WithStyles as ${componentName} }`]))
+    declaration.insertAfter(`export { ${componentName}WithStyles as ${componentName} }`)
   }
 
   declaration.insertAfter(statement([`\n\nconst ${componentName}WithStyles = ${withStyles}(${styles})(${componentName})\n\n`]))
