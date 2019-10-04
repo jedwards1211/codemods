@@ -125,4 +125,33 @@ const Box = styled('div')(
 const Foo = () => <Box marginLeft={2} />
 `)
   })
+  it(`handles breakpoints`, function () {
+    const source = `
+import * as React from 'react'
+const Foo = () => <Box sm={{marginLeft: 2, fontSize: 12}} md={{marginLeft: 3, fontSize: 16}}/>
+const Bar = () => <Box boxShadow={1} />
+`
+    const fileInfo = {
+      path: __filename,
+      source,
+    }
+    const api = {
+      jscodeshift: j.withParser('babylon'),
+      stats: (value: any) => {},
+      report: process.stdout.write.bind(process.stdout),
+    }
+    const result = setupMaterialUISystem(fileInfo, api, {})
+    expect(result).to.equal(`
+import * as React from 'react'
+import { styled } from "@material-ui/styles";
+import { spacing, typography, shadows, breakpoints, compose } from "@material-ui/system";
+const Box = styled('div')(
+  breakpoints(
+    compose(shadows, spacing, typography)
+  )
+)
+const Foo = () => <Box sm={{marginLeft: 2, fontSize: 12}} md={{marginLeft: 3, fontSize: 16}}/>
+const Bar = () => <Box boxShadow={1} />
+`)
+  })
 })
