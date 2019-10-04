@@ -1,5 +1,4 @@
 const addStyles = require('../addStyles')
-const {pathInRange} = require('../morpher-utils')
 
 module.exports = ({pathInRange}) => ({
   description: 'wrap component with withStyles',

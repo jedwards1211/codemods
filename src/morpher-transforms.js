@@ -1,5 +1,3 @@
-/* global atom */
-
 const j = require("jscodeshift").withParser("babylon")
 const requireGlob = require("require-glob")
 const { map } = require("lodash")
@@ -10,7 +8,8 @@ const {
   pathInRange,
   activeBuffer,
   activeFile,
-  jscodeshiftTransform
+  jscodeshiftTransform,
+  jscodeshiftBasedTransform
 } = morpherUtils
 
 module.exports = function () {
@@ -62,7 +61,7 @@ module.exports = function () {
       name: "convertLambdaToReturn",
       description:
         "Convert simple lambda functions to block with return statement",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         const lambdas = root
           .find(j.ArrowFunctionExpression)
           .filter(pathInRange(text, selection))
@@ -93,7 +92,7 @@ module.exports = function () {
       name: "convertLambdaToSimple",
       description:
         "Convert lambda functions with single to return statement to simple",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         const lambdas = root
           .find(j.ArrowFunctionExpression)
           .filter(pathInRange(text, selection))
@@ -103,7 +102,7 @@ module.exports = function () {
     {
       name: "convertLambdaToFunction",
       description: "Convert lambda to a function",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         const lambdas = root
           .find(j.ArrowFunctionExpression)
           .filter(pathInRange(text, selection))
@@ -113,7 +112,7 @@ module.exports = function () {
     {
       name: "reformatObjectExpression",
       description: "Break up object expression into multiple lines",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         const expressions = root
           .find(j.ObjectExpression)
           .filter(pathInRange(text, selection))
@@ -123,7 +122,7 @@ module.exports = function () {
     {
       name: "reformatObjectTypeAnnotation",
       description: "Break up object type annotation into multiple lines",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         const expressions = root
           .find(j.ObjectTypeAnnotation)
           .filter(pathInRange(text, selection))
@@ -134,14 +133,14 @@ module.exports = function () {
       name: "convertFSCToComponent",
       description:
         "Convert React Stateless Function Component to a Component class",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         require("./convertFSCToComponent")(root, pathInRange(text, selection))
       })
     },
     {
       name: "removeSurroundingBlock",
       description: "remove surrounding block",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         require("./removeSurroundingBlock")(root, pathInRange(text, selection))
       })
     },
@@ -283,7 +282,7 @@ module.exports = function () {
     {
       name: "convertStringPropToTemplate",
       description: "convert a JSX string prop to a template literal",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         require("./convertStringPropToTemplate")(
           root,
           pathInRange(text, selection)
@@ -386,7 +385,7 @@ updatedAt: Date;`,
         result: { label: "Result Properties (if no Return Type)", multiline: true },
         appContextType: { label: "AppContext type(s)" }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues, root }) => {
           if (!variableValues.name)
             throw new Error("You must select a name for the method")
@@ -404,7 +403,7 @@ updatedAt: Date;`,
         name: { label: "Name", defaultValue: identifierFromFile(activeFile()) },
         appContextType: { label: "AppContext type(s)" },
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues: { name, appContextType }, root }) => {
           if (!name) throw new Error("You must select a name for the method")
           const position = activeBuffer().characterIndexForPosition(
@@ -421,7 +420,7 @@ updatedAt: Date;`,
         name: { label: "Name", defaultValue: identifierFromFile(activeFile()) },
         appContextType: { label: "AppContext type(s)" },
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues: { name, appContextType }, root }) => {
           if (!name) throw new Error("You must select a name for the method")
           const position = activeBuffer().characterIndexForPosition(
@@ -440,7 +439,7 @@ updatedAt: Date;`,
         primaryKeyType: { label: "primary key type", defaultValue: "number" },
         options: { label: "options", multiline: true }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues, root }) => {
           require("./addBelongsToAssociation")({
             root,
@@ -462,7 +461,7 @@ updatedAt: Date;`,
         primaryKeyType: { label: "primary key type", defaultValue: "number" },
         options: { label: "options", multiline: true }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues, root }) => {
           require("./addBelongsToManyAssociation")({
             root,
@@ -483,7 +482,7 @@ updatedAt: Date;`,
         primaryKeyType: { label: "primary key type", defaultValue: "number" },
         options: { label: "options", multiline: true }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues, root }) => {
           require("./addHasManyAssociation")({
             root,
@@ -502,7 +501,7 @@ updatedAt: Date;`,
         primaryKeyType: { label: "primary key type", defaultValue: "number" },
         options: { label: "options", multiline: true }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues, root }) => {
           require("./addHasOneAssociation")({
             root,
@@ -542,7 +541,7 @@ updatedAt: Date;`,
         name: { label: "Wrapper Component Name" },
         props: { label: "child function arguments" }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues: { name, props }, root }) => {
           require("./wrapWithChildFunctionComponent")({
             root,
@@ -559,7 +558,7 @@ updatedAt: Date;`,
       variables: {
         name: { label: "Wrapper Component Name" }
       },
-      onSelected: jscodeshiftTransform(
+      onSelected: jscodeshiftBasedTransform(
         ({ text, selection, variableValues: { name }, root }) => {
           require("./wrapWithJSXElement")({
             root,
@@ -572,7 +571,7 @@ updatedAt: Date;`,
     {
       name: "unwrapJSXElement",
       description: "replace a JSX Element with its children",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         require("./unwrapJSXElement")({
           root,
           filter: pathInRange(text, selection)
@@ -582,7 +581,7 @@ updatedAt: Date;`,
     {
       name: "fix-apollo-update-fn",
       description: "TEMP, fix apollo update function",
-      onSelected: jscodeshiftTransform(({ text, selection, root }) => {
+      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
         require("./fixApolloUpdateFn")({
           root,
           file: activeFile(),
@@ -617,10 +616,17 @@ updatedAt: Date;`,
       return {
         name,
         onSelected: props.transformAst
-          ? jscodeshiftTransform(props.transformAst)
+          ? jscodeshiftBasedTransform(props.transformAst)
           : props.onSelected,
         ...props
       }
-    })
+    }),
+    {
+      name: 'Box',
+      description: 'set up @material-ui/system',
+      onSelected: (...args) => jscodeshiftTransform(
+        require('./setupMaterialUISystem')
+      )(...args),
+    }
   ]
 }

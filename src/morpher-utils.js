@@ -1,6 +1,5 @@
 /* global atom */
 
-const j = require('jscodeshift').withParser('babylon')
 const identifierFromFile = require('./identifierFromFile')
 exports.identifierFromFile = identifierFromFile
 const pathsToTransformFilter = require('./pathsToTransformFilter')
@@ -41,9 +40,30 @@ function activeFile() {
 }
 exports.activeFile = activeFile
 
-const jscodeshiftTransform = transform => ({text, ...props}) => {
-  const root = j(text)
+const jscodeshiftBasedTransform = transform => ({text, ...props}) => {
+  const root = require('jscodeshift').withParser('babylon')(text)
   transform({text, ...props, root, file: activeFile()})
   return {text: root.toSource()}
+}
+exports.jscodeshiftBasedTransform = jscodeshiftBasedTransform
+
+const jscodeshiftTransform = transform => ({text, selection, ...options}) => {
+  let jscodeshift = require('jscodeshift')
+  if (transform.parser) jscodeshift = jscodeshift.withParser(transform.parser)
+
+  const fileInfo = {
+    path: activeFile(),
+    source: text,
+  }
+  const api = {
+    jscodeshift,
+    stats: value => {},
+    report: process.stdout.write.bind(process.stdout),
+  }
+  options.selection = getCharacterIndexRange(text, selection)
+
+  const result = transform(fileInfo, api, options)
+  if (typeof result === 'string' && result !== text) return {text: result}
+  return {text}
 }
 exports.jscodeshiftTransform = jscodeshiftTransform
