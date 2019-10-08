@@ -1,6 +1,6 @@
 /* global atom */
 
-const { SelectListView, TextEditorView } = require("atom-space-pen-views")
+const { SelectListView, TextEditorView } = require('atom-space-pen-views')
 
 function getSource(ast) {
   if (ast.source) return ast.source.value
@@ -15,42 +15,51 @@ function getSource(ast) {
 
 module.exports = class PickImportList extends SelectListView {
   static content() {
-    return this.div({
-      class: 'select-list'
-    }, () => {
-      this.div({
-        class: 'identifier',
-        outlet: 'identifierArea',
-      })
-      this.div({
-        class: 'context',
-        outlet: 'contextArea',
-      })
-      this.subview('filterEditorView', new TextEditorView({
-        mini: true
-      }))
-      this.div({
-        class: 'error-message',
-        outlet: 'error'
-      })
-      this.div({
-        class: 'loading',
-        outlet: 'loadingArea'
-      }, () => {
-        this.span({
-          class: 'loading-message',
-          outlet: 'loading'
+    return this.div(
+      {
+        class: 'select-list',
+      },
+      () => {
+        this.div({
+          class: 'identifier',
+          outlet: 'identifierArea',
         })
-        return this.span({
-          class: 'badge',
-          outlet: 'loadingBadge'
+        this.div({
+          class: 'context',
+          outlet: 'contextArea',
         })
-      })
-      return this.ol({
-        class: 'list-group',
-        outlet: 'list'
-      })
-    })
+        this.subview(
+          'filterEditorView',
+          new TextEditorView({
+            mini: true,
+          })
+        )
+        this.div({
+          class: 'error-message',
+          outlet: 'error',
+        })
+        this.div(
+          {
+            class: 'loading',
+            outlet: 'loadingArea',
+          },
+          () => {
+            this.span({
+              class: 'loading-message',
+              outlet: 'loading',
+            })
+            return this.span({
+              class: 'badge',
+              outlet: 'loadingBadge',
+            })
+          }
+        )
+        return this.ol({
+          class: 'list-group',
+          outlet: 'list',
+        })
+      }
+    )
   }
 
   viewForItem({ code, ast }) {
@@ -62,7 +71,7 @@ module.exports = class PickImportList extends SelectListView {
     `
   }
 
-  setContext({identifier, line, context}) {
+  setContext({ identifier, line, context }) {
     this.identifierArea.text(identifier)
     this.contextArea.text(`${line} | ${context}`)
   }
@@ -72,10 +81,12 @@ module.exports = class PickImportList extends SelectListView {
       this.loadingArea.text('')
       return
     }
-    const {completed, total} = progress
-    this.loadingArea.text(`Server is starting... ${completed}/${total} (${Math.floor(
-      (completed * 100) / total
-    )}%)`)
+    const { completed, total } = progress
+    this.loadingArea.text(
+      `Server is starting... ${completed}/${total} (${Math.floor(
+        (completed * 100) / total
+      )}%)`
+    )
   }
 
   setImports(imports) {
@@ -83,14 +94,14 @@ module.exports = class PickImportList extends SelectListView {
     this.setItems(
       imports.map(imp =>
         Object.assign({}, imp, {
-          filterKey: `${getSource(imp.ast)}`
+          filterKey: `${getSource(imp.ast)}`,
         })
       )
     )
   }
 
   getFilterKey() {
-    return "filterKey"
+    return 'filterKey'
   }
 
   setOnSelected(onSelected) {

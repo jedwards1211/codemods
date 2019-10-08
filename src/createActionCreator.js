@@ -1,4 +1,4 @@
-const {upperFirst, snakeCase} = require('lodash')
+const { upperFirst, snakeCase } = require('lodash')
 
 module.exports = function createActionCreator(name) {
   const type = snakeCase(name).toUpperCase()

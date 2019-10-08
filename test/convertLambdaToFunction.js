@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import convertLambdaToFunction from '../src/convertLambdaToFunction'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`convertLambdaToFunction`, function () {
-  it(`works`, function () {
+describe(`convertLambdaToFunction`, function() {
+  it(`works`, function() {
     const root = j(`
 props => <div />
 const bar = props => (
@@ -36,7 +36,6 @@ const bar = function(props) {
 const baz = function anonymous<T>(props: Props<T>): T {
   return props
 }
-`
-    )
+`)
   })
 })

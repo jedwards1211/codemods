@@ -7,34 +7,32 @@ const PickImportList = require('./PickImportList')
 
 const pickImportList = new PickImportList()
 
-module.exports = async function autoimports({
-  file,
-  text,
-  root,
-}) {
+module.exports = async function autoimports({ file, text, root }) {
   if (!text) text = await fs.readFile(file, 'utf8')
 
   const client = new Client(findRoot(file))
-  client.on('progress', ({completed, total}) => pickImportList.setProgress({
-    completed,
-    total,
-  }))
+  client.on('progress', ({ completed, total }) =>
+    pickImportList.setProgress({
+      completed,
+      total,
+    })
+  )
   pickImportList.open()
 
   let first = true
   if (!root) root = j(text)
-  const suggestions = await client.suggest({code: text, file})
+  const suggestions = await client.suggest({ code: text, file })
   for (let key in suggestions) {
-    const {identifier, start, context, suggested} = suggestions[key]
+    const { identifier, start, context, suggested } = suggestions[key]
     try {
       if (!suggested.length) {
         continue
       } else if (suggested.length === 1) {
-        addImports(root, suggested[0].ast, {commonjs: true})
+        addImports(root, suggested[0].ast, { commonjs: true })
       } else {
         const selected = await new Promise((resolve, reject) => {
           try {
-            pickImportList.setContext({identifier, line: start.line, context})
+            pickImportList.setContext({ identifier, line: start.line, context })
             pickImportList.setImports(suggested)
             pickImportList.setOnSelected(resolve)
             if (!first) pickImportList.open()

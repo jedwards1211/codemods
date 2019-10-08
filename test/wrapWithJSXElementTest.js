@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 const j = require('jscodeshift').withParser('babylon')
 
 import wrapWithJSXElement from '../src/wrapWithJSXElement'
 import pathsToTransformFilter from '../src/pathsToTransformFilter'
 
-describe(`wrapWithJSXElement`, function () {
-  it(`works for children`, function () {
+describe(`wrapWithJSXElement`, function() {
+  it(`works for children`, function() {
     const code = `
 const Comp = () => (
   <div>
@@ -44,7 +44,7 @@ const Comp = () => (
 )
 `)
   })
-  it(`works for root element`, function () {
+  it(`works for root element`, function() {
     const code = `
 const Comp = () => (
   <div>

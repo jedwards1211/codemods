@@ -3,15 +3,15 @@
  * @prettier
  */
 
- /* eslint-env node */
+/* eslint-env node */
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 import j from 'jscodeshift'
 import setupMaterialUISystem from '../src/setupMaterialUISystem'
 
-describe(`setupMaterialUISystem`, function () {
-  it(`works when Box isn't already declared`, function () {
+describe(`setupMaterialUISystem`, function() {
+  it(`works when Box isn't already declared`, function() {
     const source = `
 import * as React from 'react'
 const Foo = () => <Box marginLeft={2} />
@@ -38,7 +38,7 @@ const Foo = () => <Box marginLeft={2} />
 const Bar = () => <Box boxShadow={1} />
 `)
   })
-  it(`works when Box is already declared`, function () {
+  it(`works when Box is already declared`, function() {
     const source = `
 import * as React from 'react'
 import { styled } from "@material-ui/styles";
@@ -70,7 +70,7 @@ const Foo = () => <Box marginLeft={2} />
 const Bar = () => <Box boxShadow={1} />
 `)
   })
-  it(`works when there's a single system function`, function () {
+  it(`works when there's a single system function`, function() {
     const source = `
 import * as React from 'react'
 const Foo = () => <Box marginLeft={2} />
@@ -95,7 +95,7 @@ const Box = styled('div')(
 const Foo = () => <Box marginLeft={2} />
 `)
   })
-  it(`removes unused system imports`, function () {
+  it(`removes unused system imports`, function() {
     const source = `
 import * as React from 'react'
 import { styled } from "@material-ui/styles";
@@ -125,7 +125,7 @@ const Box = styled('div')(
 const Foo = () => <Box marginLeft={2} />
 `)
   })
-  it(`handles breakpoints`, function () {
+  it(`handles breakpoints`, function() {
     const source = `
 import * as React from 'react'
 const Foo = () => <Box sm={{marginLeft: 2, fontSize: 12}} md={{marginLeft: 3, fontSize: 16}}/>

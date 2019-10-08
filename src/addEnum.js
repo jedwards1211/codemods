@@ -1,5 +1,5 @@
 const identifierFromFile = require('./identifierFromFile')
-const {pluralize, singularize} = require('inflection')
+const { pluralize, singularize } = require('inflection')
 
 module.exports = function addEnum(name, file) {
   if (!name) name = identifierFromFile(file)

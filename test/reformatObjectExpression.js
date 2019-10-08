@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import reformat from '../src/reformat'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`reformat`, function () {
-  it(`works for ObjectExpressions`, function () {
+describe(`reformat`, function() {
+  it(`works for ObjectExpressions`, function() {
     const root = j(`
 const foo = {a: 1, b: 2}
     `)
@@ -21,7 +21,7 @@ const foo = {
 }
     `)
   })
-  it(`works for ObjectTypeAnnotations`, function () {
+  it(`works for ObjectTypeAnnotations`, function() {
     const root = j(`
 type foo = {a: number, b: string}
     `)

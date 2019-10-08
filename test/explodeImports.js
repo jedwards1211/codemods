@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import explodeImports from '../src/explodeImports'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`explodeImports`, function () {
-  it(`works for values`, function () {
+describe(`explodeImports`, function() {
+  it(`works for values`, function() {
     const root = j(`
 import Rubix, {Grid as _Grid, Row, Col} from '@jcoreio/rubix'
 `)
@@ -23,7 +23,7 @@ import Row from "@jcoreio/rubix/Row";
 import Col from "@jcoreio/rubix/Col";
 `)
   })
-  it(`works for types`, function () {
+  it(`works for types`, function() {
     const root = j(`
 import type Rubix, {Grid as _Grid, Row, Col} from '@jcoreio/rubix'
 `)

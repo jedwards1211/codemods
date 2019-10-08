@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import convertLambdaToSimple from '../src/convertLambdaToSimple'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`convertLambdaToSimple`, function () {
-  it(`works`, function () {
+describe(`convertLambdaToSimple`, function() {
+  it(`works`, function() {
     const root = j(`
 props => {
   return <div />;

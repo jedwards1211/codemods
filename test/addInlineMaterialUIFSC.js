@@ -1,19 +1,24 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import addInlineMaterialUIFSC from '../src/addInlineMaterialUIFSC'
 
-describe(`addInlineMaterialUIFSC`, function () {
-  it(`works`, function () {
+describe(`addInlineMaterialUIFSC`, function() {
+  it(`works`, function() {
     const code = `
 import * as React from 'react'
 import type {Classes} from 'material-ui-render-props-styles'
 
 const Foo = () => 'bar'
 `
-    const result = addInlineMaterialUIFSC({code, file: __filename, name: 'Bar', position: code.indexOf('const Foo')})
+    const result = addInlineMaterialUIFSC({
+      code,
+      file: __filename,
+      name: 'Bar',
+      position: code.indexOf('const Foo'),
+    })
 
     expect(result).to.equal(`
 import * as React from 'react'

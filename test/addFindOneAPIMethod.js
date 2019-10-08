@@ -1,20 +1,23 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import addFindOneAPIMethod from '../src/addFindOneAPIMethod'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`addFindOneAPIMethod`, function () {
-  it(`works`, function () {
+describe(`addFindOneAPIMethod`, function() {
+  it(`works`, function() {
     const code = `// @flow
 import { reify } from "flow-runtime";
 `
     const root = j(code)
-    addFindOneAPIMethod(root, code.length, {file: __filename, modelName: 'User'})
+    addFindOneAPIMethod(root, code.length, {
+      file: __filename,
+      modelName: 'User',
+    })
     expect(root.toSource()).to.equal(`// @flow
 // @flow-runtime enable
 import { reify } from "flow-runtime";

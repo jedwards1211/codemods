@@ -1,7 +1,7 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import convertStringPropToTemplate from '../src/convertStringPropToTemplate'
@@ -9,8 +9,8 @@ import pathsToTransformFilter from '../src/pathsToTransformFilter'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`convertStringPropToTemplate`, function () {
-  it(`works`, function () {
+describe(`convertStringPropToTemplate`, function() {
+  it(`works`, function() {
     const code = `
 const foo = (
   <Field
@@ -21,7 +21,10 @@ const foo = (
 )
     `
     const root = j(code)
-    convertStringPropToTemplate(root, pathsToTransformFilter(code.indexOf('automatically')))
+    convertStringPropToTemplate(
+      root,
+      pathsToTransformFilter(code.indexOf('automatically'))
+    )
     expect(root.toSource()).to.equal(`
 const foo = (
   <Field

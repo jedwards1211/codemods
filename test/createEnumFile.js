@@ -1,18 +1,23 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import createEnumFile from '../src/createEnumFile'
 
-describe(`createEnumFile`, function () {
-  it(`works when explicit values are given`, function () {
-    expect(createEnumFile('Directions.js', `
+describe(`createEnumFile`, function() {
+  it(`works when explicit values are given`, function() {
+    expect(
+      createEnumFile(
+        'Directions.js',
+        `
 UP = 'up'
 DOWN = 'down'
 LEFT = 'left'
 RIGHT = 'right'
-`)).to.equal(`
+`
+      )
+    ).to.equal(`
 /**
  * @flow
  * @prettier
@@ -36,13 +41,18 @@ export const values: Array<Direction> = Object.keys(attributes)
 export const valuesSet: Set<Direction> = new Set(values)
 `)
   })
-  it(`works when values are not given`, function () {
-    expect(createEnumFile('Directions.js', `
+  it(`works when values are not given`, function() {
+    expect(
+      createEnumFile(
+        'Directions.js',
+        `
 UP
 DOWN
 LEFT
 RIGHT
-`)).to.equal(`
+`
+      )
+    ).to.equal(`
 /**
  * @flow
  * @prettier

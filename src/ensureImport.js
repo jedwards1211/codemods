@@ -3,9 +3,10 @@ const addImportDeclaration = require('./addImportDeclaration')
 
 function ensureImport(root, kind, name, pkg) {
   const imports = root.find(j.ImportDeclaration, {
-    importKind: kind, source: {value: pkg}
+    importKind: kind,
+    source: { value: pkg },
   })
-  let existing = imports.find(j.ImportSpecifier, {imported: {name}})
+  let existing = imports.find(j.ImportSpecifier, { imported: { name } })
   if (name === 'default' && !existing.length) {
     existing = imports.find(j.ImportDefaultSpecifier)
   }
@@ -19,11 +20,10 @@ function ensureImport(root, kind, name, pkg) {
     const lastSpecifier = specifiers.at(specifiers.length - 1)
     lastSpecifier.insertAfter(newSpecifier)
   } else {
-    addImportDeclaration(root, j.importDeclaration(
-      [newSpecifier],
-      j.literal(pkg),
-      kind
-    ))
+    addImportDeclaration(
+      root,
+      j.importDeclaration([newSpecifier], j.literal(pkg), kind)
+    )
   }
 
   return name

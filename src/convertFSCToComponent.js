@@ -4,20 +4,15 @@ function convertFSCToComponent(collection, filter = () => true) {
   function convertBase(node, id) {
     const propsParam = node.params[0]
     const renderBody = []
-    if (propsParam) renderBody.push(
-      j.variableDeclaration(
-        'const',
-        [
+    if (propsParam)
+      renderBody.push(
+        j.variableDeclaration('const', [
           j.variableDeclarator(
             propsParam,
-            j.memberExpression(
-              j.thisExpression(),
-              j.identifier('props')
-            )
-          )
-        ]
+            j.memberExpression(j.thisExpression(), j.identifier('props'))
+          ),
+        ])
       )
-    )
     if (node.body.type === 'BlockStatement') renderBody.push(...node.body.body)
     else renderBody.push(j.returnStatement(node.body))
 
@@ -32,40 +27,40 @@ function convertFSCToComponent(collection, filter = () => true) {
 
     const decl = j.classDeclaration(
       id || null,
-      j.classBody([
-        renderMethod,
-      ]),
-      j.memberExpression(
-        j.identifier('React'),
-        j.identifier('Component')
-      )
+      j.classBody([renderMethod]),
+      j.memberExpression(j.identifier('React'), j.identifier('Component'))
     )
 
     if (node.typeParameters) decl.typeParameters = node.typeParameters
-    if (propsParam && propsParam.typeAnnotation) decl.superTypeParameters = j.typeParameterInstantiation([
-      propsParam.typeAnnotation.typeAnnotation
-    ])
+    if (propsParam && propsParam.typeAnnotation)
+      decl.superTypeParameters = j.typeParameterInstantiation([
+        propsParam.typeAnnotation.typeAnnotation,
+      ])
 
     decl.__convertedToReactClass = true
 
     return decl
   }
 
-  collection.find(j.FunctionDeclaration).filter(filter).replaceWith(path =>
-    convertBase(path.node, path.node.id)
-  )
+  collection
+    .find(j.FunctionDeclaration)
+    .filter(filter)
+    .replaceWith(path => convertBase(path.node, path.node.id))
 
-  collection.find(j.VariableDeclaration).filter(filter).replaceWith(path => {
-    if (path.node.declarations.length > 1) return path.node
-    const [declarator] = path.node.declarations
-    if (
-      declarator.init.type === 'ArrowFunctionExpression' ||
-      declarator.init.type === 'FunctionExpression'
-    ) {
-      return convertBase(declarator.init, declarator.id)
-    }
-    return path.node
-  })
+  collection
+    .find(j.VariableDeclaration)
+    .filter(filter)
+    .replaceWith(path => {
+      if (path.node.declarations.length > 1) return path.node
+      const [declarator] = path.node.declarations
+      if (
+        declarator.init.type === 'ArrowFunctionExpression' ||
+        declarator.init.type === 'FunctionExpression'
+      ) {
+        return convertBase(declarator.init, declarator.id)
+      }
+      return path.node
+    })
 
   function isInsideConverted(path) {
     while (path) {
@@ -75,15 +70,29 @@ function convertFSCToComponent(collection, filter = () => true) {
     return false
   }
 
-  collection.find(j.VariableDeclarator, {init: {type: 'ArrowFunctionExpression'}}).filter(filter).replaceWith(path => {
-    if (isInsideConverted(path) || path.parent.node.type === 'VariableDeclaration') return path.node
-    return convertBase(path.node.init, path.node.id)
-  })
+  collection
+    .find(j.VariableDeclarator, { init: { type: 'ArrowFunctionExpression' } })
+    .filter(filter)
+    .replaceWith(path => {
+      if (
+        isInsideConverted(path) ||
+        path.parent.node.type === 'VariableDeclaration'
+      )
+        return path.node
+      return convertBase(path.node.init, path.node.id)
+    })
 
-  collection.find(j.ArrowFunctionExpression).filter(filter).replaceWith(path => {
-    if (isInsideConverted(path) || path.parent.node.type === 'VariableDeclarator') return path.node
-    return convertBase(path.node)
-  })
+  collection
+    .find(j.ArrowFunctionExpression)
+    .filter(filter)
+    .replaceWith(path => {
+      if (
+        isInsideConverted(path) ||
+        path.parent.node.type === 'VariableDeclarator'
+      )
+        return path.node
+      return convertBase(path.node)
+    })
 
   return collection
 }

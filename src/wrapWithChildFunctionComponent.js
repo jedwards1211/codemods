@@ -8,21 +8,34 @@ module.exports = function wrapWithChildFunctionComponent({
   name,
   props = '',
 }) {
-  const element = root.find(j.JSXElement).filter(filter).at(0)
+  const element = root
+    .find(j.JSXElement)
+    .filter(filter)
+    .at(0)
 
   if (isChildJSXElement(element.paths()[0])) {
-    element.replaceWith(path => `<${name}>
+    element.replaceWith(
+      path => `<${name}>
   {(${props}) => (
-${recast.print(path.node).toString().replace(/^/gm, '    ')}
+${recast
+        .print(path.node)
+        .toString()
+        .replace(/^/gm, '    ')}
   )}
-</${name}>`)
+</${name}>`
+    )
   } else {
-    element.replaceWith(path => `(
+    element.replaceWith(
+      path => `(
   <${name}>
     {(${props}): React.Node => (
-${recast.print(path.node).toString().replace(/^/gm, '      ')}
+${recast
+        .print(path.node)
+        .toString()
+        .replace(/^/gm, '      ')}
     )}
   </${name}>
-)`)
+)`
+    )
   }
 }

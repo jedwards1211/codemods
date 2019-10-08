@@ -1,11 +1,12 @@
 const j = require('jscodeshift')
 
 function convertLambdaToReturn(lambdas) {
-  lambdas.replaceWith(({node}) => {
+  lambdas.replaceWith(({ node }) => {
     if (node.type !== 'ArrowFunctionExpression') return node
-    const body = node.body.type === 'BlockStatement'
-      ? node.body
-      : j.blockStatement([j.returnStatement(node.body)])
+    const body =
+      node.body.type === 'BlockStatement'
+        ? node.body
+        : j.blockStatement([j.returnStatement(node.body)])
     let decl
     if (node.typeParameters) {
       decl = j.functionDeclaration(

@@ -1,10 +1,12 @@
 function convertLambdaToSimple(lambdas) {
-  lambdas.forEach(({node}) => {
+  lambdas.forEach(({ node }) => {
     if (node.type !== 'ArrowFunctionExpression') return
-    const {body} = node
+    const { body } = node
     if (body.type !== 'BlockStatement') return
-    if (body.body.length > 1) throw new Error('body must only have one statement')
-    if (body.body[0].type !== 'ReturnStatement') throw new Error('body must have only a return statement')
+    if (body.body.length > 1)
+      throw new Error('body must only have one statement')
+    if (body.body[0].type !== 'ReturnStatement')
+      throw new Error('body must have only a return statement')
     node.body = body.body[0].argument
   })
   return lambdas

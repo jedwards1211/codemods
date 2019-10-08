@@ -1,4 +1,9 @@
-function createSequelizeJoinModel({name, attributes, initAttributes, throughInitAttributes}) {
+function createSequelizeJoinModel({
+  name,
+  attributes,
+  initAttributes,
+  throughInitAttributes,
+}) {
   return `/**
  * @flow
  * @prettier

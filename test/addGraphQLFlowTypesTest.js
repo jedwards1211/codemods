@@ -1,12 +1,12 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import addGraphQLFlowTypes from '../src/addGraphQLFlowTypes'
 
-describe(`addGraphQLFlowTypes`, function () {
-  it(`works`, async function (): Promise<void> {
+describe(`addGraphQLFlowTypes`, function() {
+  it(`works`, async function(): Promise<void> {
     const code = `
 import {Query, Mutation} from 'react-apollo'
 import gql from 'graphql-tag'
@@ -93,7 +93,8 @@ const ViewContainer = () => (
       schemaFile: require.resolve('./schema.graphql'),
     })
 
-    expect(root.toSource().trim()).to.equal(`import {Query, Mutation} from 'react-apollo'
+    expect(root.toSource().trim()).to
+      .equal(`import {Query, Mutation} from 'react-apollo'
 import gql from 'graphql-tag'
 
 import type { MutationFunction, QueryRenderProps } from "react-apollo";

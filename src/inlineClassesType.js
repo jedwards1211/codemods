@@ -5,9 +5,9 @@ module.exports = function inlineClassesType(fileInfo, api) {
 
   const classesSpecifier = root
     .find(j.ImportDeclaration, {
-      source: { value: "material-ui-render-props-styles" }
+      source: { value: 'material-ui-render-props-styles' },
     })
-    .find(j.ImportSpecifier, { imported: { name: "Classes" } })
+    .find(j.ImportSpecifier, { imported: { name: 'Classes' } })
     .at(0)
 
   if (!classesSpecifier.size()) return
@@ -16,51 +16,80 @@ module.exports = function inlineClassesType(fileInfo, api) {
 
   const usages = root.find(j.GenericTypeAnnotation, {
     id: { name: localName },
-    typeParameters: { params: [{ type: "TypeofTypeAnnotation", argument: {type: 'GenericTypeAnnotation'} }] }
+    typeParameters: {
+      params: [
+        {
+          type: 'TypeofTypeAnnotation',
+          argument: { type: 'GenericTypeAnnotation' },
+        },
+      ],
+    },
   })
 
-  const objectUsages = usages
-    .filter(path => {
-      const {node, scope} = path
-      if (!scope) return false
-      const {typeParameters: {params: [{argument: {id: {name}}}]}} = node
-      const binding = scope.lookup(name)
-      if (!binding) return false
-      const declarator = j(binding.getBindings()[name]).closest(j.VariableDeclarator)
-      if (!declarator.size()) return false
-      return declarator.nodes()[0].init.type === 'ObjectExpression'
-    })
-  const functionUsages = usages
-    .filter(path => {
-      const {node, scope} = path
-      if (!scope) return false
-      const {typeParameters: {params: [{argument: {id: {name}}}]}} = node
-      const binding = scope.lookup(name)
-      if (!binding) return false
-      const declarator = j(binding.getBindings()[name]).closest(j.VariableDeclarator)
-      if (!declarator.size()) return false
-      return declarator.nodes()[0].init.type === 'ArrowFunctionExpression'
-    })
+  const objectUsages = usages.filter(path => {
+    const { node, scope } = path
+    if (!scope) return false
+    const {
+      typeParameters: {
+        params: [
+          {
+            argument: {
+              id: { name },
+            },
+          },
+        ],
+      },
+    } = node
+    const binding = scope.lookup(name)
+    if (!binding) return false
+    const declarator = j(binding.getBindings()[name]).closest(
+      j.VariableDeclarator
+    )
+    if (!declarator.size()) return false
+    return declarator.nodes()[0].init.type === 'ObjectExpression'
+  })
+  const functionUsages = usages.filter(path => {
+    const { node, scope } = path
+    if (!scope) return false
+    const {
+      typeParameters: {
+        params: [
+          {
+            argument: {
+              id: { name },
+            },
+          },
+        ],
+      },
+    } = node
+    const binding = scope.lookup(name)
+    if (!binding) return false
+    const declarator = j(binding.getBindings()[name]).closest(
+      j.VariableDeclarator
+    )
+    if (!declarator.size()) return false
+    return declarator.nodes()[0].init.type === 'ArrowFunctionExpression'
+  })
 
   const importDecl = classesSpecifier.closest(j.ImportDeclaration)
 
   const specifiers = importDecl.find(j.ImportSpecifier)
 
-  const fnName = functionUsages.size() && objectUsages.size()
-    ? `Fn${localName}`
-    : localName
-  const objName = functionUsages.size() & objectUsages.size()
-    ? `Obj${localName}`
-    : localName
+  const fnName =
+    functionUsages.size() && objectUsages.size() ? `Fn${localName}` : localName
+  const objName =
+    functionUsages.size() & objectUsages.size() ? `Obj${localName}` : localName
 
   const comments = importDecl.nodes()[0].comments
 
   if (functionUsages.size()) {
-    const inlineClasses = statement([`type ${fnName}<Styles> = $Call<
+    const inlineClasses = statement([
+      `type ${fnName}<Styles> = $Call<
   <T>((any) => T) => { [$Keys<T>]: string },
   Styles
 >
-`])
+`,
+    ])
     if (!objectUsages.size() && specifiers.size() === 1 && comments) {
       inlineClasses.comments = [...comments]
     }
@@ -72,9 +101,11 @@ module.exports = function inlineClassesType(fileInfo, api) {
     }
   }
   if (objectUsages.size()) {
-    const inlineSimpleClasses = statement([`type ${objName}<Styles> = { [$Keys<Styles>]: string }
+    const inlineSimpleClasses = statement([
+      `type ${objName}<Styles> = { [$Keys<Styles>]: string }
 
-`])
+`,
+    ])
     if (specifiers.size() === 1 && comments) {
       inlineSimpleClasses.comments = [...comments]
     }
@@ -92,4 +123,4 @@ module.exports = function inlineClassesType(fileInfo, api) {
   return root.toSource()
 }
 
-module.exports.parser = "babylon"
+module.exports.parser = 'babylon'

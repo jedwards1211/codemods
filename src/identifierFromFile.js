@@ -1,5 +1,5 @@
 const path = require('path')
-const {upperFirst, camelCase} = require('lodash')
+const { upperFirst, camelCase } = require('lodash')
 const stripExtension = require('./stripExtension')
 
 function identifierFromFile(file) {

@@ -9,32 +9,53 @@ const classProperty = require('./classProperty')
 const nullAny = require('./nullAny')
 const parseOptions = require('./parseOptions')
 
-function addHasOneAssociation({root, position, target, primaryKeyType, as, options}) {
+function addHasOneAssociation({
+  root,
+  position,
+  target,
+  primaryKeyType,
+  as,
+  options,
+}) {
   if (!as) as = target
   if (!primaryKeyType) primaryKeyType = 'number'
   options = parseOptions(options)
   ensureImports(root, 'value', ['Association'], 'sequelize')
-  ensureImports(root, 'type', [
-    'HasOneGetOne',
-    'HasOneSetOne',
-    'HasOneCreateOne',
-  ], 'sequelize')
+  ensureImports(
+    root,
+    'type',
+    ['HasOneGetOne', 'HasOneSetOne', 'HasOneCreateOne'],
+    'sequelize'
+  )
 
   ensureDefaultImport(root, 'value', target, `./${target}`)
-  ensureImports(root, 'type', [
-    `${target}Attributes`,
-    `${target}InitAttributes`,
-  ], `./${target}`)
+  ensureImports(
+    root,
+    'type',
+    [`${target}Attributes`, `${target}InitAttributes`],
+    `./${target}`
+  )
 
   const modelClass = getModelClassDeclaration(root)
   const source = modelClass.get('id', 'name').value
 
   const newProperties = [
-    classProperty(as, target, null, null, {nullable: true}),
-    classProperty(upperFirst(as), 'Association.HasOne', [source, `${target}Attributes`, `${target}InitAttributes`, target], nullAny(), {static: true}),
+    classProperty(as, target, null, null, { nullable: true }),
+    classProperty(
+      upperFirst(as),
+      'Association.HasOne',
+      [source, `${target}Attributes`, `${target}InitAttributes`, target],
+      nullAny(),
+      { static: true }
+    ),
     classProperty(`get${upperFirst(as)}`, 'HasOneGetOne', [target]),
-    classProperty(`set${upperFirst(as)}`, 'HasOneSetOne', [target, primaryKeyType]),
-    classProperty(`create${upperFirst(as)}`, 'HasOneCreateOne', [`${target}InitAttributes`]),
+    classProperty(`set${upperFirst(as)}`, 'HasOneSetOne', [
+      target,
+      primaryKeyType,
+    ]),
+    classProperty(`create${upperFirst(as)}`, 'HasOneCreateOne', [
+      `${target}InitAttributes`,
+    ]),
   ]
 
   const body = modelClass.find(j.ClassBody).get('body')
@@ -43,26 +64,24 @@ function addHasOneAssociation({root, position, target, primaryKeyType, as, optio
   const initAssociationsMethod = getInitAssociationsDeclaration(modelClass)
   const initAssociationsBody = initAssociationsMethod.get('body', 'body').value
 
-  initAssociationsBody.push(j.expressionStatement(j.assignmentExpression(
-    '=',
-    j.memberExpression(
-      j.thisExpression(),
-      j.identifier(upperFirst(as))
-    ),
-    j.callExpression(
-      j.memberExpression(
-        j.thisExpression(),
-        j.identifier('hasOne')
-      ),
-      [
-        j.identifier(target),
-        j.objectExpression([
-          j.objectProperty(j.identifier('as'), j.stringLiteral(as)),
-          ...(options ? options.properties : []),
-        ]),
-      ]
+  initAssociationsBody.push(
+    j.expressionStatement(
+      j.assignmentExpression(
+        '=',
+        j.memberExpression(j.thisExpression(), j.identifier(upperFirst(as))),
+        j.callExpression(
+          j.memberExpression(j.thisExpression(), j.identifier('hasOne')),
+          [
+            j.identifier(target),
+            j.objectExpression([
+              j.objectProperty(j.identifier('as'), j.stringLiteral(as)),
+              ...(options ? options.properties : []),
+            ]),
+          ]
+        )
+      )
     )
-  )))
+  )
 }
 
 module.exports = addHasOneAssociation

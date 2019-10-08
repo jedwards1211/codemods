@@ -1,10 +1,10 @@
-const j = require("jscodeshift").withParser("babylon")
-const identifierFromFile = require("../src/identifierFromFile")
-const pathsToTransformFilter = require("../src/pathsToTransformFilter")
+const j = require('jscodeshift').withParser('babylon')
+const identifierFromFile = require('../src/identifierFromFile')
+const pathsToTransformFilter = require('../src/pathsToTransformFilter')
 
 export default function morpherUtils(options) {
   function getCharacterIndexRange(text, selection) {
-    const newline = /\r\n?|\n/mg
+    const newline = /\r\n?|\n/gm
     let match
     for (let i = 0; i < selection.start.row; i++) {
       match = newline.exec(text)
@@ -16,7 +16,7 @@ export default function morpherUtils(options) {
       match = newline.exec(text)
     }
     const end = match.index + match[0].length + selection.end.column
-    return {start, end}
+    return { start, end }
   }
 
   function pathInRange(text, selection) {
@@ -25,11 +25,11 @@ export default function morpherUtils(options) {
   }
 
   function activeBuffer() {
-    throw new Error("not supported in test mode")
+    throw new Error('not supported in test mode')
   }
 
   function activeFile() {
-    if (!options.activeFile) throw new Error("no test activeFile given")
+    if (!options.activeFile) throw new Error('no test activeFile given')
     return options.activeFile
   }
 

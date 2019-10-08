@@ -1,7 +1,13 @@
 const pathInProject = require('./pathInProject')
 
-function createApolloContainer({name, file}) {
-  const queryBoilerplatePath = pathInProject(file, 'src', 'universal', 'components', 'queryBoilerplate')
+function createApolloContainer({ name, file }) {
+  const queryBoilerplatePath = pathInProject(
+    file,
+    'src',
+    'universal',
+    'components',
+    'queryBoilerplate'
+  )
 
   return `/**
  * @flow

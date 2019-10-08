@@ -1,16 +1,16 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 import jscodeshift from 'jscodeshift'
 
 import insertProgramStatement from '../src/insertProgramStatement'
 
 const j = jscodeshift.withParser('babylon')
-const {statement} = j.template
+const { statement } = j.template
 
-describe(`insertProgramStatement`, function () {
-  it(`inserts after initial comments when there are no statements`, function () {
+describe(`insertProgramStatement`, function() {
+  it(`inserts after initial comments when there are no statements`, function() {
     const code = `// @flow
 // @flow-runtime enable`
     const root = j(code)
@@ -19,7 +19,7 @@ describe(`insertProgramStatement`, function () {
 const baz = require('baz');`)
   })
 
-  it(`inserts after initial comments when there are statements`, function () {
+  it(`inserts after initial comments when there are statements`, function() {
     const code = `// @flow
 // @flow-runtime enable
 const foo = require('foo')`

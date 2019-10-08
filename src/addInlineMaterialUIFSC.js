@@ -1,10 +1,10 @@
-const {upperFirst, lowerFirst} = require("lodash")
+const { upperFirst, lowerFirst } = require('lodash')
 const pathToMuiTheme = require('./pathToMuiTheme')
 const jscodeshift = require('jscodeshift').withParser('babylon')
 const ensureDefaultImport = require('./ensureDefaultImport')
 const ensureImports = require('./ensureImports')
 
-function addInlineMaterialUIFSC({file, code, name, position}) {
+function addInlineMaterialUIFSC({ file, code, name, position }) {
   name = upperFirst(name)
   const styles = `${lowerFirst(name)}Styles`
   code = `${code.substring(0, position)}const ${styles} = (theme: Theme) => ({
@@ -29,7 +29,12 @@ ${code.substring(position)}`
 
   const root = jscodeshift(code)
 
-  ensureDefaultImport(root, 'value', 'createStyled', 'material-ui-render-props-styles')
+  ensureDefaultImport(
+    root,
+    'value',
+    'createStyled',
+    'material-ui-render-props-styles'
+  )
   ensureImports(root, 'type', ['Classes'], 'material-ui-render-props-styles')
   ensureImports(root, 'type', ['Theme'], pathToMuiTheme(file))
 

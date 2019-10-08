@@ -1,9 +1,10 @@
 module.exports = function getNearestPath(parentPath, position) {
   let nearest
-  const distance = path => Math.min(
-    Math.abs(path.node.start - position),
-    Math.abs(path.node.end - position)
-  )
+  const distance = path =>
+    Math.min(
+      Math.abs(path.node.start - position),
+      Math.abs(path.node.end - position)
+    )
   const numChildren = parentPath.get('length').value
   for (let i = 0; i < numChildren; i++) {
     const path = parentPath.get(i)

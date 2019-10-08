@@ -1,5 +1,5 @@
 module.exports = function reformat(literals) {
-  literals.forEach(({node}) => {
+  literals.forEach(({ node }) => {
     delete node.start
     delete node.end
     delete node.location

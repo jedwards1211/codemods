@@ -1,16 +1,13 @@
 const addImports = require('jscodeshift-add-imports')
 const j = require('jscodeshift').withParser('babylon')
-const {statement} = j.template
-const {lowerFirst} = require('lodash')
+const { statement } = j.template
+const { lowerFirst } = require('lodash')
 
 const hasFlowAnnotation = require('./hasFlowAnnotation')
 const pathInProject = require('./pathInProject')
 
 function shorthandProperty(key) {
-  const prop = j.objectProperty(
-    j.identifier(key),
-    j.identifier(key)
-  )
+  const prop = j.objectProperty(j.identifier(key), j.identifier(key))
   prop.shorthand = true
   return prop
 }
@@ -28,13 +25,27 @@ function addPropertyBeforeRestElement(pattern, property) {
 module.exports = function addStyles(root, filter = () => true, { file }) {
   const flow = hasFlowAnnotation(root)
 
-  const {withStyles} = addImports(root, statement`import { withStyles } from '@material-ui/core/styles'`)
+  const { withStyles } = addImports(
+    root,
+    statement`import { withStyles } from '@material-ui/core/styles'`
+  )
   let Theme
   if (flow) {
-    ({Theme} = addImports(root, statement([`import { type Theme } from '${pathInProject(file, './src/universal/theme')}'`])))
+    ;({ Theme } = addImports(
+      root,
+      statement([
+        `import { type Theme } from '${pathInProject(
+          file,
+          './src/universal/theme'
+        )}'`,
+      ])
+    ))
   }
 
-  const component = root.find(j.ArrowFunctionExpression).filter(filter).at(0)
+  const component = root
+    .find(j.ArrowFunctionExpression)
+    .filter(filter)
+    .at(0)
   const variableDeclarator = component.closest(j.VariableDeclarator)
   const variableDeclaration = component.closest(j.VariableDeclaration)
   const exportNamedDeclaration = component.closest(j.ExportNamedDeclaration)
@@ -44,7 +55,8 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
     ? variableDeclaration
     : null
 
-  if (!variableDeclarator.size()) throw new Error(`failed to find variable declarator`)
+  if (!variableDeclarator.size())
+    throw new Error(`failed to find variable declarator`)
 
   const componentNameNode = variableDeclarator.nodes()[0].id
   const componentName = componentNameNode.name
@@ -58,33 +70,40 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
     addPropertyBeforeRestElement(propsParam, shorthandProperty('classes'))
   } else if (propsParam && propsParam.type === 'Identifier') {
     const props = propsParam.name
-    const destructuring = component.find(j.VariableDeclarator, {
-      id: {
-        type: 'ObjectPattern',
-      },
-      init: {
-        name: props,
-      },
-    }).at(0)
+    const destructuring = component
+      .find(j.VariableDeclarator, {
+        id: {
+          type: 'ObjectPattern',
+        },
+        init: {
+          name: props,
+        },
+      })
+      .at(0)
     if (destructuring.size()) {
-      addPropertyBeforeRestElement(destructuring.nodes()[0].id, shorthandProperty('classes'))
+      addPropertyBeforeRestElement(
+        destructuring.nodes()[0].id,
+        shorthandProperty('classes')
+      )
     }
   }
 
-  root.find(j.Identifier, {name: componentName}).forEach(path => {
+  root.find(j.Identifier, { name: componentName }).forEach(path => {
     if (path.node === componentNameNode) return
     if (path.scope.lookup(componentName) === componentScope) {
       if (path.parent.node.type === 'ExportSpecifier') {
-        path.parent.replace(j.exportSpecifier(
-          j.identifier(componentNameWithStyles),
-          j.identifier(componentName)
-        ))
+        path.parent.replace(
+          j.exportSpecifier(
+            j.identifier(componentNameWithStyles),
+            j.identifier(componentName)
+          )
+        )
       } else {
         path.replace(j.identifier(componentNameWithStyles))
       }
     }
   })
-  root.find(j.JSXIdentifier, {name: componentName}).forEach(path => {
+  root.find(j.JSXIdentifier, { name: componentName }).forEach(path => {
     if (path.scope.lookup(componentName) === componentScope) {
       path.replace(j.jsxIdentifier(componentNameWithStyles))
     }
@@ -98,14 +117,16 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
   if (flow) {
     if (propsParam && propsParam.typeAnnotation) {
-      const {typeAnnotation} = propsParam.typeAnnotation
+      const { typeAnnotation } = propsParam.typeAnnotation
       if (typeAnnotation) {
         const classesPropAnnotation = j.objectTypeProperty(
           j.identifier('classes'),
           j.genericTypeAnnotation(
             j.identifier('Classes'),
             j.typeParameterInstantiation([
-              j.typeofTypeAnnotation(j.genericTypeAnnotation(j.identifier(styles), null))
+              j.typeofTypeAnnotation(
+                j.genericTypeAnnotation(j.identifier(styles), null)
+              ),
             ])
           ),
           false
@@ -114,9 +135,12 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
         if (typeAnnotation.type === 'GenericTypeAnnotation') {
           const propsTypeName = typeAnnotation.id.name
           const typeScope = componentScope.lookupType(propsTypeName)
-          const propsTypeAlias = root.find(j.TypeAlias, {
-            id: {name: propsTypeName}
-          }).filter(path => path.scope === typeScope).at(0)
+          const propsTypeAlias = root
+            .find(j.TypeAlias, {
+              id: { name: propsTypeName },
+            })
+            .filter(path => path.scope === typeScope)
+            .at(0)
           if (propsTypeAlias.size()) {
             const exportDecl = propsTypeAlias.closest(j.ExportNamedDeclaration)
             afterStyles = exportDecl.size() ? exportDecl : propsTypeAlias
@@ -125,28 +149,42 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
           if (propsType.size()) {
             propsType.nodes()[0].properties.push(classesPropAnnotation)
           }
-        } else if (typeAnnotation && typeAnnotation.type === 'ObjectTypeAnnotation') {
+        } else if (
+          typeAnnotation &&
+          typeAnnotation.type === 'ObjectTypeAnnotation'
+        ) {
           typeAnnotation.properties.push(classesPropAnnotation)
         }
       }
     }
   }
 
-  if (flow && !root.find(j.TypeAlias, {id: {name: 'Classes'}}).size()) {
+  if (flow && !root.find(j.TypeAlias, { id: { name: 'Classes' } }).size()) {
     afterStyles.insertBefore(
-      statement([`\n\ntype Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`])
+      statement([
+        `\n\ntype Classes<Styles> = $Call<<T>((any) => T) => { [$Keys<T>]: string }, Styles>`,
+      ])
     )
   }
 
+  afterStyles.insertBefore(
+    statement([
+      `\n\nconst ${styles} = ${flow ? `(theme: ${Theme})` : 'theme'} => ({
 
-  afterStyles.insertBefore(statement([`\n\nconst ${styles} = ${flow ? `(theme: ${Theme})` : 'theme'} => ({
-
-})\n\n`]))
+})\n\n`,
+    ])
+  )
   if (exportNamedDeclaration.size()) {
-    declaration.insertAfter(`export { ${componentName}WithStyles as ${componentName} }`)
+    declaration.insertAfter(
+      `export { ${componentName}WithStyles as ${componentName} }`
+    )
   }
 
-  declaration.insertAfter(statement([`\n\nconst ${componentName}WithStyles = ${withStyles}(${styles})(${componentName})\n\n`]))
+  declaration.insertAfter(
+    statement([
+      `\n\nconst ${componentName}WithStyles = ${withStyles}(${styles})(${componentName})\n\n`,
+    ])
+  )
 
   if (exportNamedDeclaration.size()) {
     exportNamedDeclaration.replaceWith(path => path.node.declaration)

@@ -3,15 +3,15 @@
  * @prettier
  */
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 import j from 'jscodeshift'
 import inlineClassesType from '../src/inlineClassesType'
 
 const jscodeshift = j.withParser(inlineClassesType.parser)
 
-describe(`inlineClassesType`, function () {
-  it(`works`, function () {
+describe(`inlineClassesType`, function() {
+  it(`works`, function() {
     const code = `
 // @flow
 
@@ -33,7 +33,7 @@ export type Props = {
 }
     `
 
-    expect(inlineClassesType({source: code}, {jscodeshift})).to.equal(`
+    expect(inlineClassesType({ source: code }, { jscodeshift })).to.equal(`
 // @flow
 
 type ObjClasses<Styles> = { [$Keys<Styles>]: string };

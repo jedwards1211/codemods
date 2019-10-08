@@ -1,15 +1,15 @@
 // @flow
 
-import {describe, it} from 'mocha'
-import {expect} from 'chai'
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
 
 import jscodeshift from 'jscodeshift'
 import convertFSCToComponent from '../src/convertFSCToComponent'
 
 const j = jscodeshift.withParser('babylon')
 
-describe(`convertFSCToComponent`, function () {
-  it(`works`, function () {
+describe(`convertFSCToComponent`, function() {
+  it(`works`, function() {
     const root = j(`
 const Foo = <T>({className}: Props<T>): React.Node => {
   const blah = () => 2

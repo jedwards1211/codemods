@@ -1,4 +1,4 @@
-function createSequelizeModel({name, attributes, initAttributes}) {
+function createSequelizeModel({ name, attributes, initAttributes }) {
   return `/**
  * @flow
  * @prettier
