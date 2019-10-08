@@ -1,12 +1,17 @@
 // @flow
 
-import {describe, it} from 'mocha'
+import { describe, it } from 'mocha'
 import recast from 'recast'
 
 import graphqlToFlow from '../src/graphqlToFlow'
 
-describe(`graphqlToFlow`, function () {
-  it(`works`, async function (): Promise<void> {
+import pipeline from '../src/pipeline'
+import { map } from 'lodash/fp'
+
+import { expect } from 'chai'
+
+describe(`graphqlToFlow`, function() {
+  it(`works`, async function(): Promise<void> {
     const query = `
     fragment channelFields on MQTTDeviceChannel {
       mqttTag
@@ -50,11 +55,84 @@ describe(`graphqlToFlow`, function () {
     }
     `
 
-    for (let def of (await graphqlToFlow({
-      schemaFile: require.resolve('./schema.graphql'),
-      query,
-    })).statements) {
-      console.log(recast.print(def).code) // eslint-disable-line no-console
-    }
+    const expected = `type ChannelFieldsData = {
+    mqttTag: string,
+    multiplier: ?number,
+    offset: ?number,
+};
+type CreateDeviceMutationVariables = {
+    organizationId: number,
+    values: {
+        name: string,
+        type?: ?("MQTT"),
+    },
+};
+type CreateDeviceMutationData = { device: { id: number } };
+type CreateDeviceMutationFunction = MutationFunction<CreateDeviceMutationData, CreateDeviceMutationVariables>
+type GetStuffQueryVariables = {
+    userGroupId: number,
+    id: number,
+    newChannel: {
+        deviceId: number,
+        channelGroupId: number,
+        direction: "FROM_DEVICE" | "TO_DEVICE",
+        tagInDevice: string,
+        MetadataItem?: ?{
+            tag?: ?string,
+            organizationId?: ?number,
+            tagInOrganization?: ?string,
+            name: string,
+            dataType: "number" | "string" | "group",
+            isDigital?: ?boolean,
+            units?: ?string,
+            min?: ?number,
+            max?: ?number,
+            rounding?: ?number,
+            displayPrecision?: ?number,
+        },
+        mqttTag: string,
+        enabled?: ?boolean,
+        name?: ?string,
+        multiplier?: ?number,
+        offset?: ?number,
+    },
+};
+type GetStuffQueryData = {
+    roles: Object,
+    item: ?{
+        id: number,
+        name: string,
+        __typename: string,
+    },
+    MQTTDeviceChannelGroup: ?{
+        id: number,
+        Channels: {
+            pageInfo: { hasNextPage: boolean },
+            edges: ?Array<?{ node: {
+                id: number,
+                ...ChannelFieldsData,
+            } }>,
+        },
+        TagPrefixes: {
+            id: number,
+            deviceTagPrefix: string,
+        },
+    },
+    MQTTDeviceChannel: ?{
+        id: number,
+        mqttTag: string,
+    },
+};`
+
+    const actual = pipeline(
+      (await graphqlToFlow({
+        schemaFile: require.resolve('./schema.graphql'),
+        query,
+      })).statements,
+      map(def => recast.print(def).code),
+      arr => arr.join('\n')
+    )
+
+    expect(actual).to.equal(expected)
   })
 })
