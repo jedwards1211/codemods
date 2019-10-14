@@ -34,7 +34,7 @@ module.exports = async function graphqlToFlow({
   server,
   ApolloQueryResult = 'ApolloQueryResult',
   MutationFunction = 'MutationFunction',
-  extractTypes = new Set(),
+  extractTypes = new Map(),
   scalarAliases = new Map(),
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
@@ -267,7 +267,8 @@ type __T = ${value};`)
     const { name } = type
     function extractIfNecessary(result) {
       if (extractTypes.has(name)) {
-        const alias = addTypeAlias(name, result)
+        const flowTypeName = extractTypes.get(name) || name
+        const alias = addTypeAlias(flowTypeName, result)
         return j.genericTypeAnnotation(j.identifier(alias.id.name), null)
       }
       return result

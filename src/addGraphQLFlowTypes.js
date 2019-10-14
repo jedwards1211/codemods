@@ -103,11 +103,15 @@ module.exports = async function addGraphQLFlowTypes(options) {
         }
       },
     })
-    const extractTypes = new Set()
+    const extractTypes = new Map()
     const scalarAliases = new Map()
     for (const pragma of getPragmas(path)) {
       regex(pragma, /extract(-types)?:\s*(.*)/m, m =>
-        m[2].split(/\s*,\s*/g).forEach(t => extractTypes.add(t))
+        m[2]
+          .split(/\s*,\s*/g)
+          .forEach(t =>
+            regex(t, /(\w+)(\s*=\s*(\w+))?/, m => extractTypes.set(m[1], m[3]))
+          )
       )
       regex(pragma, /scalar:\s*(\w+)\s*=\s*(\w+)/m, m =>
         scalarAliases.set(m[1], m[2])

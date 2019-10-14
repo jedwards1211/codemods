@@ -18,7 +18,7 @@ query {
 }
 \`
 
-// @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
+// @graphql-to-flow extract-types: MQTTDeviceChannel = MQTTDeviceChannelData, DeviceDirection
 // @graphql-to-flow scalar: JSON = Object
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
@@ -107,7 +107,7 @@ query {
 }
 \`
 
-// @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
+// @graphql-to-flow extract-types: MQTTDeviceChannel = MQTTDeviceChannelData, DeviceDirection
 // @graphql-to-flow scalar: JSON = Object
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
@@ -162,24 +162,24 @@ type GetStuffQueryData = {
     direction: DeviceDirection1,
     Channels: {
       pageInfo: { hasNextPage: boolean },
-      edges: ?Array<?{ node: MQTTDeviceChannel }>,
+      edges: ?Array<?{ node: MQTTDeviceChannelData }>,
     },
     TagPrefixes: {
       id: number,
       deviceTagPrefix: string,
     },
   },
-  MQTTDeviceChannel: ?MQTTDeviceChannel1,
+  MQTTDeviceChannel: ?MQTTDeviceChannelData1,
 };
 
 // @graphql-to-flow auto-generated
-type MQTTDeviceChannel1 = {
+type MQTTDeviceChannelData1 = {
   id: number,
   mqttTag: string,
 };
 
 // @graphql-to-flow auto-generated
-type MQTTDeviceChannel = { id: number } & ChannelFieldsData;
+type MQTTDeviceChannelData = { id: number } & ChannelFieldsData;
 
 // @graphql-to-flow auto-generated
 type DeviceDirection1 = "FROM_DEVICE" | "TO_DEVICE";
