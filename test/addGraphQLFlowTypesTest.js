@@ -374,4 +374,65 @@ const View = () => {
   return <div />
 };`)
   })
+  it(`adds types to useSubscription hooks`, async function() {
+    const code = `// @flow
+import {useSubscription} from 'react-apollo'
+import gql from 'graphql-tag'
+
+const subscription = gql\`
+subscription tagState($tag: String!) {
+  TagState(tag: $tag) {
+    tag
+    v
+  }
+}
+\`
+
+const View = () => {
+  const {loading, data} = useSubscription(subscription, {
+    variables: {tag: 'foo'}
+  })
+  return <div />
+}
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import { useSubscription, type SubscriptionResult } from 'react-apollo';
+import gql from 'graphql-tag'
+
+const subscription = gql\`
+subscription tagState($tag: String!) {
+  TagState(tag: $tag) {
+    tag
+    v
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type TagStateSubscriptionData = { TagState: ?{
+  tag: string,
+  v: ?mixed,
+} };
+
+// @graphql-to-flow auto-generated
+type TagStateSubscriptionVariables = { tag: string };
+
+/* eslint-enable no-unused-vars */
+const View = () => {
+  const {
+    loading,
+    data
+  }: SubscriptionResult<TagStateSubscriptionData, TagStateSubscriptionVariables> = useSubscription(subscription, {
+    variables: {tag: 'foo'}
+  })
+  return <div />
+};`)
+  })
 })

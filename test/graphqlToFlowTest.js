@@ -1,7 +1,7 @@
 // @flow
 
 import { describe, it } from 'mocha'
-import recast from 'recast'
+import * as recast from 'recast'
 
 import graphqlToFlow from '../src/graphqlToFlow'
 

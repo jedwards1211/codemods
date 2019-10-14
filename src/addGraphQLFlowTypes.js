@@ -43,7 +43,14 @@ module.exports = async function addGraphQLFlowTypes(options) {
       addImports(
         root,
         statement`import {type MutationResult} from 'react-apollo'`
-      ).MutationFunction
+      ).MutationResult
+  )
+  const addSubscriptionResult = once(
+    () =>
+      addImports(
+        root,
+        statement`import {type SubscriptionResult} from 'react-apollo'`
+      ).SubscriptionResult
   )
 
   const queryRenderPropsAnnotation = (data, variables) =>
@@ -68,6 +75,21 @@ module.exports = async function addGraphQLFlowTypes(options) {
         j.typeParameterInstantiation([
           j.genericTypeAnnotation(j.identifier(data.id.name), null),
         ])
+      )
+    )
+
+  const subscriptionResultAnnotation = (data, variables) =>
+    j.typeAnnotation(
+      j.genericTypeAnnotation(
+        j.identifier(addSubscriptionResult()),
+        j.typeParameterInstantiation(
+          [
+            j.genericTypeAnnotation(j.identifier(data.id.name), null),
+            variables
+              ? j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+              : null,
+          ].filter(Boolean)
+        )
       )
     )
 
@@ -121,6 +143,14 @@ module.exports = async function addGraphQLFlowTypes(options) {
       statement`import {useMutation} from '@apollo/react-hooks'`
     ).useMutation
 
+  const useSubscription =
+    findImports(root, statement`import {useSubscription} from 'react-apollo'`)
+      .useSubscription ||
+    findImports(
+      root,
+      statement`import {useSubscription} from '@apollo/react-hooks'`
+    ).useSubscription
+
   for (let path of queryPaths) {
     const { node } = path
     const {
@@ -135,6 +165,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
     const queryAST = typeof query === 'string' ? graphql.parse(query) : query
     const queryNames = []
     const mutationNames = []
+    const subscriptionNames = []
     graphql.visit(queryAST, {
       [graphql.Kind.OPERATION_DEFINITION]({ operation, name }) {
         switch (operation) {
@@ -143,6 +174,9 @@ module.exports = async function addGraphQLFlowTypes(options) {
             break
           case 'mutation':
             if (name) mutationNames.push(name.value)
+            break
+          case 'subscription':
+            if (name) subscriptionNames.push(name.value)
             break
         }
       },
@@ -362,6 +396,32 @@ module.exports = async function addGraphQLFlowTypes(options) {
                   : null,
               ].filter(Boolean)
             )
+          )
+        })
+    }
+
+    //////////////////////////////////////////////////
+    // Add types to useSubscription hooks
+
+    if (useSubscription && subscriptionNames.length) {
+      root
+        .find(j.VariableDeclarator, {
+          init: {
+            type: 'CallExpression',
+            callee: {
+              type: 'Identifier',
+              name: useSubscription,
+            },
+            arguments: [{ type: 'Identifier', name: declarator.id.name }],
+          },
+        })
+        .forEach(path => {
+          const { data, variables } =
+            onlyValue(generatedTypes.subscription) || {}
+          if (!data) return
+          path.node.id.typeAnnotation = subscriptionResultAnnotation(
+            data,
+            variables
           )
         })
     }

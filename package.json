@@ -123,6 +123,9 @@
     "rimraf": "^2.6.0",
     "semantic-release": "^15.1.4"
   },
+  "resolutions": {
+    "recast": "^0.18.3"
+  },
   "dependencies": {
     "@babel/runtime": "^7.1.5",
     "atom-space-pen-views": "^2.2.0",
@@ -143,7 +146,7 @@
     "lodash.map": "^4.6.0",
     "lodash.upperfirst": "^4.3.1",
     "promisify-child-process": "^1.0.6",
-    "recast": "0.16.2",
+    "recast": "^0.18.3",
     "require-glob": "^3.2.0",
     "reselect": "^3.0.1",
     "superagent": "^3.8.3"
