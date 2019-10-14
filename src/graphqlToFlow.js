@@ -186,10 +186,7 @@ type __T = ${value};`)
     }
     const type = types[name]
     if (type && type.inputFields) return convertInputType(type)
-    return (
-      scalarAliases.get(name) ||
-      j.genericTypeAnnotation(j.mixedTypeAnnotation(), null)
-    )
+    return scalarAliases.get(name) || j.mixedTypeAnnotation()
   }
 
   function convertSelectionSet(selectionSet, type) {
