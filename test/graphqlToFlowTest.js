@@ -164,4 +164,32 @@ type GetStuffQueryData = {
   TagPrefixes`
     )
   })
+  it(`can rename extracted fragment types`, async function() {
+    const query = `
+    fragment channelFields on MQTTDeviceChannel {
+      mqttTag
+      multiplier
+      offset
+    }
+    `
+
+    const expected = `type TestData = {
+    mqttTag: string,
+    multiplier: ?number,
+    offset: ?number,
+};`
+
+    const actual = pipeline(
+      (await graphqlToFlow({
+        schemaFile: require.resolve('./schema.graphql'),
+        query,
+        scalarAliases: new Map([['JSON', 'Object']]),
+        extractTypes: new Map([['channelFields', 'TestData']]),
+      })).statements,
+      map(def => recast.print(def).code),
+      arr => arr.join('\n')
+    )
+
+    expect(actual).to.equal(expected)
+  })
 })

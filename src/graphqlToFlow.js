@@ -78,7 +78,10 @@ type __T = ${value};`)
       def.selectionSet,
       types[def.typeCondition.name.value]
     )
-    const alias = addTypeAlias(`${upperFirst(def.name.value)}Data`, type)
+    const alias = addTypeAlias(
+      extractTypes.get(def.name.value) || `${upperFirst(def.name.value)}Data`,
+      type
+    )
     fragments.set(def.name.value, alias)
   }
 
