@@ -24,20 +24,52 @@ module.exports = async function addGraphQLFlowTypes(options) {
   const root = j(code)
   const gql =
     findImports(root, statement`import gql from 'graphql-tag'`).gql || 'gql'
-  const addMutationFunction = once(
-    () =>
-      addImports(
-        root,
-        statement`import type {MutationFunction} from 'react-apollo'`
-      ).MutationFunction
-  )
   const addQueryRenderProps = once(
     () =>
       addImports(
         root,
-        statement`import type {QueryRenderProps} from 'react-apollo'`
+        statement`import {type QueryRenderProps} from 'react-apollo'`
       ).QueryRenderProps
   )
+  const addMutationFunction = once(
+    () =>
+      addImports(
+        root,
+        statement`import {type MutationFunction} from 'react-apollo'`
+      ).MutationFunction
+  )
+  const addMutationResult = once(
+    () =>
+      addImports(
+        root,
+        statement`import {type MutationResult} from 'react-apollo'`
+      ).MutationFunction
+  )
+
+  const queryRenderPropsAnnotation = (data, variables) =>
+    j.typeAnnotation(
+      j.genericTypeAnnotation(
+        j.identifier(addQueryRenderProps()),
+        j.typeParameterInstantiation(
+          [
+            j.genericTypeAnnotation(j.identifier(data.id.name), null),
+            variables
+              ? j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+              : null,
+          ].filter(Boolean)
+        )
+      )
+    )
+
+  const mutationResultAnnotation = data =>
+    j.typeAnnotation(
+      j.genericTypeAnnotation(
+        j.identifier(addMutationFunction()),
+        j.typeParameterInstantiation([
+          j.genericTypeAnnotation(j.identifier(data.id.name), null),
+        ])
+      )
+    )
 
   const findQueryPaths = root => [
     ...root
@@ -75,6 +107,20 @@ module.exports = async function addGraphQLFlowTypes(options) {
 
   const addedStatements = new Set()
 
+  const useQuery =
+    findImports(root, statement`import {useQuery} from 'react-apollo'`)
+      .useQuery ||
+    findImports(root, statement`import {useQuery} from '@apollo/react-hooks'`)
+      .useQuery
+
+  const useMutation =
+    findImports(root, statement`import {useMutation} from 'react-apollo'`)
+      .useMutation ||
+    findImports(
+      root,
+      statement`import {useMutation} from '@apollo/react-hooks'`
+    ).useMutation
+
   for (let path of queryPaths) {
     const { node } = path
     const {
@@ -87,7 +133,6 @@ module.exports = async function addGraphQLFlowTypes(options) {
       (evaluatedQueries && evaluatedQueries[declarator.id.name]) ||
       quasis[0].value.raw
     const queryAST = typeof query === 'string' ? graphql.parse(query) : query
-    let MutationFunction = 'MutationFunction'
     const queryNames = []
     const mutationNames = []
     graphql.visit(queryAST, {
@@ -97,7 +142,6 @@ module.exports = async function addGraphQLFlowTypes(options) {
             if (name) queryNames.push(name.value)
             break
           case 'mutation':
-            MutationFunction = addMutationFunction()
             if (name) mutationNames.push(name.value)
             break
         }
@@ -123,7 +167,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       schemaFile,
       server,
       query,
-      MutationFunction,
+      MutationFunction: mutationNames.length ? addMutationFunction() : null,
       extractTypes,
       scalarAliases,
     })
@@ -152,6 +196,9 @@ module.exports = async function addGraphQLFlowTypes(options) {
         addedStatements.add(type)
       }
     }
+
+    ///////////////////////////////////////////////
+    // Add types to <Query> element child functions
 
     if (queryNames.length) {
       const { Query } = findImports(
@@ -198,30 +245,20 @@ module.exports = async function addGraphQLFlowTypes(options) {
             const firstParam = childFunction.get('params', 0)
             const { data, variables } = onlyValue(generatedTypes.query) || {}
             if (!data) return
-            const QueryRenderProps = addQueryRenderProps()
             if (firstParam && firstParam.node.type === 'Identifier') {
               const newIdentifier = j.identifier(firstParam.node.name)
-              newIdentifier.typeAnnotation = j.typeAnnotation(
-                j.genericTypeAnnotation(
-                  j.identifier(QueryRenderProps),
-                  j.typeParameterInstantiation(
-                    [
-                      j.genericTypeAnnotation(j.identifier(data.id.name), null),
-                      variables
-                        ? j.genericTypeAnnotation(
-                            j.identifier(variables.id.name),
-                            null
-                          )
-                        : null,
-                    ].filter(Boolean)
-                  )
-                )
+              newIdentifier.typeAnnotation = queryRenderPropsAnnotation(
+                data,
+                variables
               )
               firstParam.replace(newIdentifier)
             }
           }
         })
     }
+
+    //////////////////////////////////////////////////
+    // Add types to <Mutation> element child functions
 
     if (mutationNames.length) {
       const { Mutation } = findImports(
@@ -257,6 +294,75 @@ module.exports = async function addGraphQLFlowTypes(options) {
               firstParam.replace(newIdentifier)
             }
           }
+        })
+    }
+
+    //////////////////////////////////////////////////
+    // Add types to useQuery hooks
+
+    if (useQuery && queryNames.length) {
+      root
+        .find(j.VariableDeclarator, {
+          init: {
+            type: 'CallExpression',
+            callee: {
+              type: 'Identifier',
+              name: useQuery,
+            },
+            arguments: [{ type: 'Identifier', name: declarator.id.name }],
+          },
+        })
+        .forEach(path => {
+          const { data, variables } = onlyValue(generatedTypes.query) || {}
+          if (!data) return
+          path.node.id.typeAnnotation = queryRenderPropsAnnotation(
+            data,
+            variables
+          )
+        })
+    }
+
+    //////////////////////////////////////////////////
+    // Add types to useMutation hooks
+
+    if (useMutation && mutationNames.length) {
+      root
+        .find(j.VariableDeclarator, {
+          init: {
+            type: 'CallExpression',
+            callee: {
+              type: 'Identifier',
+              name: useMutation,
+            },
+            arguments: [{ type: 'Identifier', name: declarator.id.name }],
+          },
+        })
+        .forEach(path => {
+          const { data, mutationFunction } =
+            onlyValue(generatedTypes.mutation) || {}
+          if (!mutationFunction) return
+          const {
+            node: { id },
+          } = path
+          id.typeAnnotation = j.typeAnnotation(
+            j.tupleTypeAnnotation(
+              [
+                j.genericTypeAnnotation(
+                  j.identifier(mutationFunction.id.name),
+                  null
+                ),
+                data && id.type === 'ArrayPattern' && id.length > 1
+                  ? j.genericTypeAnnotation(
+                      j.identifier(addMutationResult()),
+                      j.typeParameterInstantiation([
+                        j.genericTypeAnnotation(data.id.name),
+                        null,
+                      ])
+                    )
+                  : null,
+              ].filter(Boolean)
+            )
+          )
         })
     }
   }

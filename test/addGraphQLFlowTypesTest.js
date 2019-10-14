@@ -95,10 +95,8 @@ const ViewContainer = () => (
     })
 
     expect(root.toSource().trim()).to
-      .equal(`import {Query, Mutation} from 'react-apollo'
+      .equal(`import { Query, Mutation, type MutationFunction, type QueryRenderProps } from 'react-apollo';
 import gql from 'graphql-tag'
-
-import type { MutationFunction, QueryRenderProps } from "react-apollo";
 
 // @graphql-to-flow ignore
 const ignoredQuery = gql\`
@@ -264,5 +262,116 @@ const ViewContainer = () => (
     )}
   </Mutation>
 );`)
+  })
+  it(`adds types to useQuery hooks`, async function() {
+    const code = `// @flow
+import {useQuery} from 'react-apollo'
+import gql from 'graphql-tag'
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    name
+  }
+}
+\`
+
+const View = () => {
+  const {data} = useQuery(query)
+  return <div />
+}
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import { useQuery, type QueryRenderProps } from 'react-apollo';
+import gql from 'graphql-tag'
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    name
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetStuffQueryData = { User: ?{ name: ?string } };
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryVariables = { userId: number };
+
+/* eslint-enable no-unused-vars */
+const View = () => {
+  const {
+    data
+  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query)
+  return <div />
+};`)
+  })
+  it.skip(`adds types to useMutation hooks`, async function() {
+    const code = `// @flow
+import {useMutation} from 'react-apollo'
+import gql from 'graphql-tag'
+
+const mutation = gql\`
+mutation createUser($values: CreateUser!) {
+  createUser(values: $values) {
+    id
+    name
+  }
+}
+\`
+
+const View = () => {
+  const [createUser] = useMutation(mutation)
+  return <div />
+}
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import { useMutation, type MutationFunction } from 'react-apollo';
+import gql from 'graphql-tag'
+
+const mutation = gql\`
+mutation createUser($values: CreateUser!) {
+  createUser(values: $values) {
+    id
+    name
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type CreateUserMutationFunction = MutationFunction<CreateUserMutationData, CreateUserMutationVariables>;
+
+// @graphql-to-flow auto-generated
+type CreateUserMutationData = { createUser: {
+  id: number,
+  name: ?string,
+} };
+
+// @graphql-to-flow auto-generated
+type CreateUserMutationVariables = { values: {
+  name?: ?string,
+  username: string,
+} };
+
+/* eslint-enable no-unused-vars */
+const View = () => {
+  const [createUser]: [CreateUserMutationFunction] = useMutation(mutation)
+  return <div />
+};`)
   })
 })
