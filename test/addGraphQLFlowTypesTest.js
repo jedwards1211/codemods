@@ -19,6 +19,7 @@ query {
 \`
 
 // @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
+// @graphql-to-flow scalar: JSON = Object
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
@@ -107,6 +108,7 @@ query {
 \`
 
 // @graphql-to-flow extract-types: MQTTDeviceChannel, DeviceDirection
+// @graphql-to-flow scalar: JSON = Object
 const query = gql\`
 fragment channelFields on MQTTDeviceChannel {
   mqttTag
@@ -177,10 +179,7 @@ type MQTTDeviceChannel1 = {
 };
 
 // @graphql-to-flow auto-generated
-type MQTTDeviceChannel = {
-  id: number,
-  ...ChannelFieldsData,
-};
+type MQTTDeviceChannel = { id: number } & ChannelFieldsData;
 
 // @graphql-to-flow auto-generated
 type DeviceDirection1 = "FROM_DEVICE" | "TO_DEVICE";
@@ -258,7 +257,7 @@ const ViewContainer = () => (
         query={query}
         variables={({baz: 'qux'}: GetStuffQueryVariables)}
       >
-        {(data: GetStuffQueryData) => (
+        {(data: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables>) => (
           <div />
         )}
       </Query>

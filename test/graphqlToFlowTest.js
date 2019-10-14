@@ -108,10 +108,7 @@ type GetStuffQueryData = {
         id: number,
         Channels: {
             pageInfo: { hasNextPage: boolean },
-            edges: ?Array<?{ node: {
-                id: number,
-                ...ChannelFieldsData,
-            } }>,
+            edges: ?Array<?{ node: { id: number } & ChannelFieldsData }>,
         },
         TagPrefixes: {
             id: number,
@@ -128,11 +125,28 @@ type GetStuffQueryData = {
       (await graphqlToFlow({
         schemaFile: require.resolve('./schema.graphql'),
         query,
+        scalarAliases: new Map([['JSON', 'Object']]),
       })).statements,
       map(def => recast.print(def).code),
       arr => arr.join('\n')
     )
 
     expect(actual).to.equal(expected)
+  })
+  it(`throws helpful error if the query includes a nonexistent field`, async function() {
+    await expect(
+      graphqlToFlow({
+        schemaFile: require.resolve('./schema.graphql'),
+        query: `fragment channelFields on MQTTDeviceChannel {
+        mqttTag
+        multiplier
+        offset
+        foo
+      }`,
+      })
+    ).to.be.rejectedWith(
+      Error,
+      `type MQTTDeviceChannel doesn't have a field named foo`
+    )
   })
 })

@@ -12,16 +12,18 @@ const { expression, statement } = j.template
 
 const PRAGMA = '@graphql-to-flow'
 const AUTO_GENERATED_COMMENT = ` ${PRAGMA} auto-generated`
-const IGNORE_REGEX = new RegExp(`^\\s*${PRAGMA}\\s+ignore`)
-const EXTRACT_TYPES_REGEX = new RegExp(
-  `^\\s*${PRAGMA}\\s+extract-types:\\s*(.*)$`
-)
+
+function regex(s, rx, callback) {
+  const match = rx.exec(s)
+  if (match) callback(match)
+}
 
 module.exports = async function addGraphQLFlowTypes(options) {
   const { file, schema, schemaFile, server } = options
   const code = options.code || (await fs.readFile(file, 'utf8'))
   const root = j(code)
-  const { gql } = findImports(root, statement`import gql from 'graphql-tag'`)
+  const gql =
+    findImports(root, statement`import gql from 'graphql-tag'`).gql || 'gql'
   const addMutationFunction = once(
     () =>
       addImports(
@@ -37,18 +39,18 @@ module.exports = async function addGraphQLFlowTypes(options) {
       ).QueryRenderProps
   )
 
-  const findQueryPaths = root =>
-    [...root.find(j.TaggedTemplateExpression, { tag: { name: gql } }).paths()]
+  const findQueryPaths = root => [
+    ...root
+      .find(j.TaggedTemplateExpression, { tag: { name: gql } })
+      .paths()
       .filter(path => {
-        if (hasIgnoreComment(j(path).closest(j.VariableDeclarator)))
-          return false
-        if (hasIgnoreComment(j(path).closest(j.VariableDeclaration)))
-          return false
-        if (hasIgnoreComment(j(path).closest(j.ExportNamedDeclaration)))
-          return false
+        for (const pragma of getPragmas(path)) {
+          if (pragma.trim() === 'ignore') return false
+        }
         return true
       })
-      .reverse()
+      .reverse(),
+  ]
 
   const queryPaths = findQueryPaths(root)
 
@@ -92,7 +94,6 @@ module.exports = async function addGraphQLFlowTypes(options) {
       [graphql.Kind.OPERATION_DEFINITION]({ operation, name }) {
         switch (operation) {
           case 'query':
-            addQueryRenderProps()
             if (name) queryNames.push(name.value)
             break
           case 'mutation':
@@ -103,9 +104,15 @@ module.exports = async function addGraphQLFlowTypes(options) {
       },
     })
     const extractTypes = new Set()
-    getTypesToExtract(j(path).closest(j.VariableDeclarator), extractTypes)
-    getTypesToExtract(j(path).closest(j.VariableDeclaration), extractTypes)
-    getTypesToExtract(j(path).closest(j.ExportNamedDeclaration), extractTypes)
+    const scalarAliases = new Map()
+    for (const pragma of getPragmas(path)) {
+      regex(pragma, /extract(-types)?:\s*(.*)/m, m =>
+        m[2].split(/\s*,\s*/g).forEach(t => extractTypes.add(t))
+      )
+      regex(pragma, /scalar:\s*(\w+)\s*=\s*(\w+)/m, m =>
+        scalarAliases.set(m[1], m[2])
+      )
+    }
     const { statements: types, generatedTypes } = await graphqlToFlow({
       file,
       schema,
@@ -114,6 +121,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       query,
       MutationFunction,
       extractTypes,
+      scalarAliases,
     })
     for (let type of types) {
       if (!type.comments) type.comments = []
@@ -184,12 +192,26 @@ module.exports = async function addGraphQLFlowTypes(options) {
           const childFunction = getChildFunction(elementPath)
           if (childFunction) {
             const firstParam = childFunction.get('params', 0)
-            const { data } = onlyValue(generatedTypes.query) || {}
+            const { data, variables } = onlyValue(generatedTypes.query) || {}
             if (!data) return
+            const QueryRenderProps = addQueryRenderProps()
             if (firstParam && firstParam.node.type === 'Identifier') {
               const newIdentifier = j.identifier(firstParam.node.name)
               newIdentifier.typeAnnotation = j.typeAnnotation(
-                j.genericTypeAnnotation(j.identifier(data.id.name), null)
+                j.genericTypeAnnotation(
+                  j.identifier(QueryRenderProps),
+                  j.typeParameterInstantiation(
+                    [
+                      j.genericTypeAnnotation(j.identifier(data.id.name), null),
+                      variables
+                        ? j.genericTypeAnnotation(
+                            j.identifier(variables.id.name),
+                            null
+                          )
+                        : null,
+                    ].filter(Boolean)
+                  )
+                )
               )
               firstParam.replace(newIdentifier)
             }
@@ -352,25 +374,16 @@ function getChildFunction(elementPath) {
   return null
 }
 
-function hasIgnoreComment(collection) {
-  if (!collection.size()) return false
-  const { comments } = collection.nodes()[0]
-  return (
-    comments &&
-    comments.findIndex(
-      comment => comment.leading && IGNORE_REGEX.test(comment.value)
-    ) >= 0
-  )
-}
-
-function getTypesToExtract(collection, resultSet) {
-  if (!collection.size()) return
-  const { comments } = collection.nodes()[0]
-  if (!comments) return
-  comments.forEach(comment => {
-    if (!comment.leading) return
-    const match = EXTRACT_TYPES_REGEX.exec(comment.value)
-    if (!match) return
-    match[1].split(/\s+|\s*,\s*/g).forEach(type => resultSet.add(type))
-  })
+function* getPragmas(path) {
+  while (path && path.value && path.value.type !== 'Program') {
+    const { comments } = path.value
+    if (comments) {
+      for (const comment of comments) {
+        const PRAGMA_REGEX = new RegExp(`^\\s*${PRAGMA}\\s+(.+)`, 'mg')
+        const match = PRAGMA_REGEX.exec(comment.value)
+        if (match) yield match[1]
+      }
+    }
+    path = path.parent
+  }
 }
