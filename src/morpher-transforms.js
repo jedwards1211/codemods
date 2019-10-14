@@ -110,26 +110,6 @@ module.exports = function() {
       }),
     },
     {
-      name: 'reformatObjectExpression',
-      description: 'Break up object expression into multiple lines',
-      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
-        const expressions = root
-          .find(j.ObjectExpression)
-          .filter(pathInRange(text, selection))
-        require('./reformat')(expressions)
-      }),
-    },
-    {
-      name: 'reformatObjectTypeAnnotation',
-      description: 'Break up object type annotation into multiple lines',
-      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
-        const expressions = root
-          .find(j.ObjectTypeAnnotation)
-          .filter(pathInRange(text, selection))
-        require('./reformat')(expressions)
-      }),
-    },
-    {
       name: 'convertFSCToComponent',
       description:
         'Convert React Stateless Function Component to a Component class',
@@ -152,20 +132,6 @@ module.exports = function() {
       }),
     },
     {
-      name: 'mui-fsc',
-      description: 'Functional Stateless Component styled with Material UI',
-      onSelected: () => ({
-        text: require('./createMaterialUIFSC')(activeFile()),
-      }),
-    },
-    {
-      name: 'mui-comp',
-      description: 'React Component styled with Material UI',
-      onSelected: () => ({
-        text: require('./createMaterialUIComponent')(activeFile()),
-      }),
-    },
-    {
       name: 'fsc',
       description: 'React Functional Stateless component',
       onSelected: () => ({
@@ -177,13 +143,6 @@ module.exports = function() {
       description: 'Untyped React Functional Stateless component',
       onSelected: () => ({
         text: require('./createUntypedFSC')(activeFile()),
-      }),
-    },
-    {
-      name: 'ufsc-with-styles',
-      description: 'Untyped React Functional Stateless component with styles',
-      onSelected: () => ({
-        text: require('./createUntypedFSCWithStyles')(activeFile()),
       }),
     },
     {
@@ -215,69 +174,6 @@ module.exports = function() {
       onSelected: () => ({
         text: require('./createUntypedReactComponent')(activeFile()),
       }),
-    },
-    {
-      name: 'mui-ifsc',
-      description: 'inline Material UI styled functional stateless component',
-      variables: {
-        name: {
-          label: 'component name',
-          defaultValue: identifierFromFile(activeFile()),
-        },
-      },
-      onSelected: ({ text, selection, variableValues: { name } }) => {
-        if (!name) throw new Error('You must select a name for the component')
-        const position = activeBuffer().characterIndexForPosition(
-          selection.start
-        )
-        return {
-          text: require('./addInlineMaterialUIFSC')({
-            code: text,
-            file: activeFile(),
-            name,
-            position,
-          }),
-        }
-      },
-    },
-    {
-      name: 'apollo-fsc',
-      description: 'create apollo query functional stateless component',
-      variables: {
-        name: {
-          label: 'component name',
-          defaultValue: identifierFromFile(activeFile()),
-        },
-      },
-      onSelected: ({ text, variableValues: { name } }) => {
-        if (!name) throw new Error('You must select a name for the component')
-        return {
-          text: require('./createApolloContainer')({
-            file: activeFile(),
-            name,
-          }),
-        }
-      },
-    },
-    {
-      name: 'apollo-ifsc',
-      description: 'create inline apollo query functional stateless component',
-      variables: {
-        name: {
-          label: 'component name',
-          defaultValue: identifierFromFile(activeFile()),
-        },
-      },
-      onSelected: async ({ text, selection, variableValues: { name } }) => {
-        if (!name) throw new Error('You must select a name for the component')
-        return {
-          text: await require('./createInlineApolloContainer')({
-            file: activeFile(),
-            name,
-            position: activeBuffer().characterIndexForPosition(selection.start),
-          }),
-        }
-      },
     },
     {
       name: 'convertStringPropToTemplate',
@@ -601,39 +497,6 @@ updatedAt: Date;`,
           filter: pathInRange(text, selection),
         })
       }),
-    },
-    {
-      name: 'fix-apollo-update-fn',
-      description: 'TEMP, fix apollo update function',
-      onSelected: jscodeshiftBasedTransform(({ text, selection, root }) => {
-        require('./fixApolloUpdateFn')({
-          root,
-          file: activeFile(),
-          filter: pathInRange(text, selection),
-        })
-      }),
-    },
-    {
-      name: 'autoimports',
-      description: 'automatically add imports',
-      onSelected: async ({ text, selection }) => {
-        const root = await require('./autoimports')({
-          file: activeFile(),
-          text,
-        })
-        return { text: root.toSource() }
-      },
-    },
-    {
-      name: 'action-creator',
-      description: 'Redux action creator',
-      variables: {
-        name: { label: 'action name' },
-      },
-      onSelected: ({ variableValues: { name } }) => {
-        if (!name) throw new Error('You must select a name for the action')
-        return { selectedText: require('./createActionCreator')(name) }
-      },
     },
     ...map(requireGlob.sync('./morpher-transforms/*.js'), (props, name) => {
       if (typeof props === 'function') props = props(morpherUtils)
