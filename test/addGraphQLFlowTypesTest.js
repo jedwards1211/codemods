@@ -277,7 +277,9 @@ query getStuff($userId: Int!) {
 \`
 
 const View = () => {
-  const {data} = useQuery(query)
+  const {data} = useQuery(query, {
+    variables: {userId: 1}
+  })
   return <div />
 }
 `
@@ -310,7 +312,9 @@ type GetStuffQueryVariables = { userId: number };
 const View = () => {
   const {
     data
-  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query)
+  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query, {
+    variables: ({userId: 1}: GetStuffQueryVariables)
+  })
   return <div />
 };`)
   })
@@ -430,7 +434,7 @@ const View = () => {
     loading,
     data
   }: SubscriptionResult<TagStateSubscriptionData, TagStateSubscriptionVariables> = useSubscription(subscription, {
-    variables: {tag: 'foo'}
+    variables: ({tag: 'foo'}: TagStateSubscriptionVariables)
   })
   return <div />
 };`)

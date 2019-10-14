@@ -353,6 +353,20 @@ module.exports = async function addGraphQLFlowTypes(options) {
             data,
             variables
           )
+          const options = path.node.init.arguments[1]
+          if (variables && options && options.type === 'ObjectExpression') {
+            const variablesProp = options.properties.find(
+              p => p.key.type === 'Identifier' && p.key.name === 'variables'
+            )
+            if (variablesProp) {
+              variablesProp.value = j.typeCastExpression(
+                variablesProp.value,
+                j.typeAnnotation(
+                  j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+                )
+              )
+            }
+          }
         })
     }
 
@@ -423,6 +437,20 @@ module.exports = async function addGraphQLFlowTypes(options) {
             data,
             variables
           )
+          const options = path.node.init.arguments[1]
+          if (variables && options && options.type === 'ObjectExpression') {
+            const variablesProp = options.properties.find(
+              p => p.key.type === 'Identifier' && p.key.name === 'variables'
+            )
+            if (variablesProp) {
+              variablesProp.value = j.typeCastExpression(
+                variablesProp.value,
+                j.typeAnnotation(
+                  j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+                )
+              )
+            }
+          }
         })
     }
   }
