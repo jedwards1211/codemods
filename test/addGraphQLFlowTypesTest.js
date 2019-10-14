@@ -318,6 +318,71 @@ const View = () => {
   return <div />
 };`)
   })
+  it(`leaves everything generated for useQuery hooks intact`, async function() {
+    const code = `// @flow
+import { useQuery, type QueryRenderProps } from 'react-apollo';
+import gql from 'graphql-tag'
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    name
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetStuffQueryData = { User: ?{ name: ?string } };
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryVariables = { userId: number };
+
+/* eslint-enable no-unused-vars */
+const View = () => {
+  const {
+    data
+  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query, {
+    variables: ({userId: 1}: GetStuffQueryVariables)
+  })
+  return <div />
+};
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import { useQuery, type QueryRenderProps } from 'react-apollo';
+import gql from 'graphql-tag'
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    name
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetStuffQueryData = { User: ?{ name: ?string } };
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryVariables = { userId: number };
+
+/* eslint-enable no-unused-vars */
+const View = () => {
+  const {
+    data
+  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query, {
+    variables: ({userId: 1}: GetStuffQueryVariables)
+  })
+  return <div />
+};`)
+  })
   it.skip(`adds types to useMutation hooks`, async function() {
     const code = `// @flow
 import {useMutation} from 'react-apollo'

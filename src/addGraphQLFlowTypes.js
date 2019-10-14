@@ -18,6 +18,14 @@ function regex(s, rx, callback) {
   if (match) callback(match)
 }
 
+function typeCast(node, typeAnnotation) {
+  if (node.type === 'TypeCastExpression') {
+    node.typeAnnotation = typeAnnotation
+    return node
+  }
+  return j.typeCastExpression(node, typeAnnotation)
+}
+
 module.exports = async function addGraphQLFlowTypes(options) {
   const { file, schema, schemaFile, server } = options
   const code = options.code || (await fs.readFile(file, 'utf8'))
@@ -260,7 +268,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
             const { variables } = onlyValue(generatedTypes.query) || {}
             if (variables && variablesValue.value.type === 'ObjectExpression') {
               variablesValue.replace(
-                j.typeCastExpression(
+                typeCast(
                   variablesValue.value,
                   j.typeAnnotation(
                     j.genericTypeAnnotation(
@@ -359,7 +367,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
               p => p.key.type === 'Identifier' && p.key.name === 'variables'
             )
             if (variablesProp) {
-              variablesProp.value = j.typeCastExpression(
+              variablesProp.value = typeCast(
                 variablesProp.value,
                 j.typeAnnotation(
                   j.genericTypeAnnotation(j.identifier(variables.id.name), null)
@@ -443,7 +451,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
               p => p.key.type === 'Identifier' && p.key.name === 'variables'
             )
             if (variablesProp) {
-              variablesProp.value = j.typeCastExpression(
+              variablesProp.value = typeCast(
                 variablesProp.value,
                 j.typeAnnotation(
                   j.genericTypeAnnotation(j.identifier(variables.id.name), null)
