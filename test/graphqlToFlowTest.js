@@ -146,7 +146,22 @@ type GetStuffQueryData = {
       })
     ).to.be.rejectedWith(
       Error,
-      `type MQTTDeviceChannel doesn't have a field named foo`
+      `type MQTTDeviceChannel doesn't have a field named foo.  Valid fields are:
+  id
+  deviceId
+  channelGroupId
+  direction
+  type
+  tag
+  tagInDevice
+  mqttTag
+  enabled
+  name
+  multiplier
+  offset
+  MQTTDevice
+  MetadataItem
+  TagPrefixes`
     )
   })
 })

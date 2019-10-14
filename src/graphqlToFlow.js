@@ -225,7 +225,10 @@ type __T = ${value};`)
     const fieldDef = innerType.fields[fieldName]
     if (!fieldDef)
       throw new Error(
-        `type ${innerType.name} doesn't have a field named ${fieldName}`
+        `type ${
+          innerType.name
+        } doesn't have a field named ${fieldName}.  Valid fields are:
+  ${map(innerType.fields, f => f.name).join('\n  ')}`
       )
     return fieldDef.type
   }
