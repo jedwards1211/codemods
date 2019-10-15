@@ -671,8 +671,6 @@ query getOrg($organizationId: Int!) {
       forbidEval: true,
     })
 
-    console.log(root.toSource())
-
     expect(root.toSource().trim()).to.equal(`// @flow
 import gql from 'graphql-tag'
 
