@@ -92,6 +92,7 @@ const ViewContainer = () => (
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
     })
 
     expect(root.toSource().trim()).to
@@ -287,6 +288,7 @@ const View = () => {
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
@@ -352,6 +354,7 @@ const View = () => {
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
@@ -406,6 +409,7 @@ const View = () => {
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
@@ -468,6 +472,7 @@ const View = () => {
     const root = await addGraphQLFlowTypes({
       code,
       schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
@@ -503,5 +508,55 @@ const View = () => {
   })
   return <div />
 };`)
+  })
+  it(`interpolates basic templates without evaluation`, async function() {
+    const code = `// @flow
+import gql from 'graphql-tag'
+
+const userFields = \`
+  id
+  name
+\`
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    \${userFields}
+  }
+}
+\`
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import gql from 'graphql-tag'
+
+const userFields = \`
+  id
+  name
+\`
+
+const query = gql\`
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    \${userFields}
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetStuffQueryData = { User: ?{
+  id: number,
+  name: ?string,
+} };
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryVariables = { userId: number };`)
   })
 })

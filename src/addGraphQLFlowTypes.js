@@ -1,3 +1,5 @@
+const FAIL = require('./precompute/FAIL')
+const precomputeExpression = require('./precompute/precomputeExpression')
 const j = require('jscodeshift').withParser('babylon')
 const findImports = require('./findImports')
 const addImports = require('./addImports')
@@ -27,7 +29,7 @@ function typeCast(node, typeAnnotation) {
 }
 
 module.exports = async function addGraphQLFlowTypes(options) {
-  const { file, schema, schemaFile, server } = options
+  const { file, schema, schemaFile, server, forbidEval } = options
   const code = options.code || (await fs.readFile(file, 'utf8'))
   const root = j(code)
   const gql =
@@ -79,7 +81,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
   const mutationResultAnnotation = data =>
     j.typeAnnotation(
       j.genericTypeAnnotation(
-        j.identifier(addMutationFunction()),
+        j.identifier(addMutationResult()),
         j.typeParameterInstantiation([
           j.genericTypeAnnotation(j.identifier(data.id.name), null),
         ])
@@ -119,11 +121,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
   let evalNeeded = false
 
   for (let path of queryPaths) {
-    const { node } = path
-    const {
-      quasi: { expressions },
-    } = node
-    if (expressions.length) {
+    if (precomputeExpression(path.get('quasi')) === FAIL) {
       evalNeeded = true
       break
     }
@@ -132,6 +130,11 @@ module.exports = async function addGraphQLFlowTypes(options) {
   let evaluatedQueries
 
   if (evalNeeded) {
+    if (forbidEval) {
+      throw new Error(
+        `queries need to be evaluated, but options.forbidEval was given`
+      )
+    }
     evaluatedQueries = await evaluateQueries()
   }
 
@@ -160,16 +163,15 @@ module.exports = async function addGraphQLFlowTypes(options) {
     ).useSubscription
 
   for (let path of queryPaths) {
-    const { node } = path
-    const {
-      quasi: { quasis },
-    } = node
     const declarator = j(path)
       .closest(j.VariableDeclarator)
       .nodes()[0]
     const query =
       (evaluatedQueries && evaluatedQueries[declarator.id.name]) ||
-      quasis[0].value.raw
+      precomputeExpression(path.get('quasi'))
+    if (query === FAIL) {
+      throw new Error(`failed to compute query`)
+    }
     const queryAST = typeof query === 'string' ? graphql.parse(query) : query
     const queryNames = []
     const mutationNames = []
@@ -412,13 +414,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
                   null
                 ),
                 data && id.type === 'ArrayPattern' && id.length > 1
-                  ? j.genericTypeAnnotation(
-                      j.identifier(addMutationResult()),
-                      j.typeParameterInstantiation([
-                        j.genericTypeAnnotation(data.id.name),
-                        null,
-                      ])
-                    )
+                  ? mutationResultAnnotation(data)
                   : null,
               ].filter(Boolean)
             )
