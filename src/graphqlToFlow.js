@@ -35,15 +35,15 @@ module.exports = async function graphqlToFlow({
   ApolloQueryResult = 'ApolloQueryResult',
   MutationFunction = 'MutationFunction',
   extractTypes = new Map(),
-  scalarAliases = new Map(),
+  external = new Map(),
 }) {
   if (schemaFile && !schema) schema = await loadSchema(schemaFile)
-  for (const [key, value] of scalarAliases.entries()) {
+  for (const [key, value] of external.entries()) {
     const converted = j(`// @flow
 type __T = ${value};`)
       .find(j.TypeAlias)
       .nodes()[0].right
-    scalarAliases.set(key, converted)
+    external.set(key, converted)
   }
 
   const strippedFileName = file
@@ -62,6 +62,7 @@ type __T = ${value};`)
     query: {},
     mutation: {},
     subscription: {},
+    fragment: {},
   }
 
   function convertDefinition(def) {
@@ -74,6 +75,7 @@ type __T = ${value};`)
   }
 
   function convertFragmentDefinition(def) {
+    if (external.has(def.name.value)) return
     const type = convertSelectionSet(
       def.selectionSet,
       types[def.typeCondition.name.value]
@@ -82,6 +84,7 @@ type __T = ${value};`)
       extractTypes.get(def.name.value) || `${upperFirst(def.name.value)}Data`,
       type
     )
+    generatedTypes.fragment[def.name.value] = alias
     fragments.set(def.name.value, alias)
   }
 
@@ -188,8 +191,9 @@ type __T = ${value};`)
         return j.stringTypeAnnotation()
     }
     const type = types[name]
+    if (external.has(name)) return external.get(name)
     if (type && type.inputFields) return convertInputType(type)
-    return scalarAliases.get(name) || j.mixedTypeAnnotation()
+    return j.mixedTypeAnnotation()
   }
 
   function convertSelectionSet(selectionSet, type) {
@@ -205,12 +209,16 @@ type __T = ${value};`)
       )
     }
     fragmentSelections.forEach(spread => {
-      const alias = fragments.get(spread.name.value)
-      if (!alias)
-        throw new Error(
-          `missing fragment definition named ${spread.name.value}`
-        )
-      intersects.push(j.genericTypeAnnotation(alias.id, null))
+      if (external.has(spread.name.value)) {
+        intersects.push(external.get(spread.name.value))
+      } else {
+        const alias = fragments.get(spread.name.value)
+        if (!alias)
+          throw new Error(
+            `missing fragment definition named ${spread.name.value}`
+          )
+        intersects.push(j.genericTypeAnnotation(alias.id, null))
+      }
     })
     return intersects.length === 1
       ? intersects[0]
@@ -297,13 +305,14 @@ type __T = ${value};`)
       case 'String':
         return j.stringTypeAnnotation()
     }
+    if (external.has(name)) return external.get(name)
     function convertCustomType(type, selectionSet) {
       if (types[name]) type = types[name]
       if (type.inputFields) return convertInputType(type)
       if (selectionSet) {
         return convertSelectionSet(selectionSet, type)
       } else {
-        return scalarAliases.get(name) || j.mixedTypeAnnotation()
+        return j.mixedTypeAnnotation()
       }
     }
     return extractIfNecessary(convertCustomType(type, selectionSet))
