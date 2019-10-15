@@ -96,7 +96,7 @@ const ViewContainer = () => (
     })
 
     expect(root.toSource().trim()).to
-      .equal(`import { Query, Mutation, type MutationFunction, type QueryRenderProps } from 'react-apollo';
+      .equal(`import { Query, Mutation, type QueryRenderProps, type MutationFunction } from 'react-apollo';
 import gql from 'graphql-tag'
 
 // @graphql-to-flow ignore
@@ -597,6 +597,14 @@ fragment UserFields on User {
 }
 \`
 
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type UserFieldsData = {
+  id: number,
+  name: ?string,
+};
+
+/* eslint-enable no-unused-vars */
 const query = gql\`
 \${userFragment}
 query getStuff($userId: Int!) {
@@ -604,26 +612,21 @@ query getStuff($userId: Int!) {
     ...UserFields
   }
 }
-\`
+\`;
 
 // @graphql-to-flow auto-generated
 /* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?UserFieldsData };
 
 // @graphql-to-flow auto-generated
-type GetStuffQueryVariables = { userId: number };
-
-// @graphql-to-flow auto-generated
-type UserFieldsData = {
-  id: number,
-  name: ?string,
-};`)
+type GetStuffQueryVariables = { userId: number };`)
   })
   it(`avoids duplicating extracted types when interpolating fragments`, async function() {
     const code = `// @flow
 import gql from 'graphql-tag'
 
 // @graphql-to-flow extract: DeviceGroup = DeviceGroupData
+// @graphql-to-flow extract: OrganizationFields = OrgFields
 const orgFragment = gql\`
 fragment OrganizationFields on Organization {
   id
@@ -671,10 +674,13 @@ query getOrg($organizationId: Int!) {
       forbidEval: true,
     })
 
+    console.log(root.toSource())
+
     expect(root.toSource().trim()).to.equal(`// @flow
 import gql from 'graphql-tag'
 
 // @graphql-to-flow extract: DeviceGroup = DeviceGroupData
+// @graphql-to-flow extract: OrganizationFields = OrgFields
 const orgFragment = gql\`
 fragment OrganizationFields on Organization {
   id
@@ -688,6 +694,13 @@ fragment OrganizationFields on Organization {
 
 // @graphql-to-flow auto-generated
 /* eslint-disable no-unused-vars */
+type OrgFields = {
+  id: number,
+  name: string,
+  AllDevicesGroup: DeviceGroupData,
+};
+
+// @graphql-to-flow auto-generated
 type DeviceGroupData = {
   id: number,
   name: string,
@@ -705,6 +718,15 @@ fragment DeviceFields on Device {
 }
 \`;
 
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type DeviceFieldsData = {
+  id: number,
+  name: string,
+  Organization: OrgFields,
+};
+
+/* eslint-enable no-unused-vars */
 const query1 = gql\`
 \${deviceFragment}
 query getDevice($deviceId: Int!) {
@@ -712,7 +734,7 @@ query getDevice($deviceId: Int!) {
     ...DeviceFields
   }
 }
-\`
+\`;
 
 // @graphql-to-flow auto-generated
 /* eslint-disable no-unused-vars */
@@ -720,13 +742,6 @@ type GetDeviceQueryData = { Device: ?DeviceFieldsData };
 
 // @graphql-to-flow auto-generated
 type GetDeviceQueryVariables = { deviceId: number };
-
-// @graphql-to-flow auto-generated
-type DeviceFieldsData = {
-  id: number,
-  name: string,
-  Organization: OrganizationFieldsData,
-};
 
 /* eslint-enable no-unused-vars */
 const query2 = gql\`
@@ -740,16 +755,9 @@ query getOrg($organizationId: Int!) {
 
 // @graphql-to-flow auto-generated
 /* eslint-disable no-unused-vars */
-type GetOrgQueryData = { Organization: ?OrganizationFieldsData };
+type GetOrgQueryData = { Organization: ?OrgFields };
 
 // @graphql-to-flow auto-generated
-type GetOrgQueryVariables = { organizationId: number };
-
-// @graphql-to-flow auto-generated
-type OrganizationFieldsData = {
-  id: number,
-  name: string,
-  AllDevicesGroup: DeviceGroupData,
-};`)
+type GetOrgQueryVariables = { organizationId: number };`)
   })
 })

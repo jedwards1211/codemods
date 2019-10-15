@@ -150,8 +150,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
           if (pragma.trim() === 'ignore') return false
         }
         return true
-      })
-      .reverse(),
+      }),
   ]
 
   const queryPaths = findQueryPaths(root)
@@ -200,6 +199,32 @@ module.exports = async function addGraphQLFlowTypes(options) {
       statement`import {useSubscription} from '@apollo/react-hooks'`
     ).useSubscription
 
+  const generatedTypesForQuery = new Map()
+
+  function* collectExternals(path) {
+    const { expressions } = path.node.quasi
+
+    for (let i = 0; i < expressions.length; i++) {
+      if (expressions[i].type !== 'Identifier') continue
+      const init = resolveIdentifier(path.get('quasi', 'expressions', i))
+      if (
+        !init ||
+        !init.node ||
+        init.node.type !== 'TaggedTemplateExpression' ||
+        init.node.tag.name !== gql
+      ) {
+        continue
+      }
+      yield* collectExternals(init)
+      const generated = generatedTypesForQuery.get(init.parent.node.id.name)
+      if (!generated) continue
+      const { fragment } = generated
+      for (let key in fragment) {
+        yield [key, fragment[key].id.name]
+      }
+    }
+  }
+
   for (let path of queryPaths) {
     const declarator = j(path)
       .closest(j.VariableDeclarator)
@@ -230,7 +255,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       },
     })
     const extractTypes = new Map()
-    const external = new Map()
+    const external = new Map([...collectExternals(path)])
     for (const pragma of getPragmas(path)) {
       regex(pragma, /extract(-types)?:\s*(.*)/m, m =>
         m[2]
@@ -257,6 +282,8 @@ module.exports = async function addGraphQLFlowTypes(options) {
       extractTypes,
       external,
     })
+    generatedTypesForQuery.set(declarator.id.name, generatedTypes)
+
     for (let type of types) {
       if (!type.comments) type.comments = []
       type.comments.push(j.commentLine(AUTO_GENERATED_COMMENT))
