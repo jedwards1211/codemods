@@ -1,3 +1,4 @@
+const resolveIdentifier = require('./precompute/resolveIdentifier')
 const FAIL = require('./precompute/FAIL')
 const precomputeExpression = require('./precompute/precomputeExpression')
 const j = require('jscodeshift').withParser('babylon')
@@ -34,6 +35,43 @@ module.exports = async function addGraphQLFlowTypes(options) {
   const root = j(code)
   const gql =
     findImports(root, statement`import gql from 'graphql-tag'`).gql || 'gql'
+
+  function precomputeExpressionInGQLTemplateLiteral(path) {
+    const { node } = path
+    if (path === FAIL || !node || !node.type) {
+      return FAIL
+    }
+    switch (node.type) {
+      case 'TaggedTemplateExpression':
+        return node.tag.type === 'Identifier' && node.tag.name === gql
+          ? precomputeGQLTemplateLiteral(path)
+          : FAIL
+      case 'Identifier':
+        return precomputeExpressionInGQLTemplateLiteral(resolveIdentifier(path))
+    }
+    return precomputeExpression(path)
+  }
+
+  function precomputeGQLTemplateLiteral(path) {
+    const { quasis } = path.node.quasi
+    if (quasis.length === 1) return quasis[0].value.cooked
+
+    const parts = []
+    let i = 0
+    while (i < quasis.length - 1) {
+      parts.push(quasis[i].value.cooked)
+      const expr = precomputeExpressionInGQLTemplateLiteral(
+        path.get('quasi', 'expressions', i)
+      )
+      if (expr === FAIL) return FAIL
+      parts.push(expr)
+      i++
+    }
+    parts.push(quasis[i].value.cooked)
+
+    return parts.join('')
+  }
+
   const addQueryRenderProps = once(
     () =>
       addImports(
@@ -121,7 +159,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
   let evalNeeded = false
 
   for (let path of queryPaths) {
-    if (precomputeExpression(path.get('quasi')) === FAIL) {
+    if (precomputeGQLTemplateLiteral(path) === FAIL) {
       evalNeeded = true
       break
     }
@@ -168,7 +206,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       .nodes()[0]
     const query =
       (evaluatedQueries && evaluatedQueries[declarator.id.name]) ||
-      precomputeExpression(path.get('quasi'))
+      precomputeGQLTemplateLiteral(path)
     if (query === FAIL) {
       throw new Error(`failed to compute query`)
     }

@@ -559,4 +559,199 @@ type GetStuffQueryData = { User: ?{
 // @graphql-to-flow auto-generated
 type GetStuffQueryVariables = { userId: number };`)
   })
+
+  it(`interpolates gql templates without evaluation`, async function() {
+    const code = `// @flow
+import gql from 'graphql-tag'
+
+const userFragment = gql\`
+fragment UserFields on User {
+  id
+  name
+}
+\`
+
+const query = gql\`
+\${userFragment}
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    ...UserFields
+  }
+}
+\`
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
+    })
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import gql from 'graphql-tag'
+
+const userFragment = gql\`
+fragment UserFields on User {
+  id
+  name
+}
+\`
+
+const query = gql\`
+\${userFragment}
+query getStuff($userId: Int!) {
+  User(id: $userId) {
+    ...UserFields
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetStuffQueryData = { User: ?UserFieldsData };
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryVariables = { userId: number };
+
+// @graphql-to-flow auto-generated
+type UserFieldsData = {
+  id: number,
+  name: ?string,
+};`)
+  })
+  it(`avoids duplicating extracted types when interpolating fragments`, async function() {
+    const code = `// @flow
+import gql from 'graphql-tag'
+
+// @graphql-to-flow extract: DeviceGroup = DeviceGroupData
+const orgFragment = gql\`
+fragment OrganizationFields on Organization {
+  id
+  name
+  AllDevicesGroup {
+    id
+    name
+  }
+}
+\`
+
+const deviceFragment = gql\`
+\${orgFragment}
+fragment DeviceFields on Device {
+  id
+  name
+  Organization {
+    ...OrganizationFields
+  }
+}
+\`
+
+const query1 = gql\`
+\${deviceFragment}
+query getDevice($deviceId: Int!) {
+  Device(id: $deviceId) {
+    ...DeviceFields
+  }
+}
+\`
+
+const query2 = gql\`
+\${orgFragment}
+query getOrg($organizationId: Int!) {
+  Organization(id: $organizationId) {
+    ...OrganizationFields
+  }
+}
+\`
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
+    })
+
+    console.log(root.toSource())
+
+    expect(root.toSource().trim()).to.equal(`// @flow
+import gql from 'graphql-tag'
+
+// @graphql-to-flow extract: DeviceGroup = DeviceGroupData
+const orgFragment = gql\`
+fragment OrganizationFields on Organization {
+  id
+  name
+  AllDevicesGroup {
+    id
+    name
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type DeviceGroupData = {
+  id: number,
+  name: string,
+};
+
+/* eslint-enable no-unused-vars */
+const deviceFragment = gql\`
+\${orgFragment}
+fragment DeviceFields on Device {
+  id
+  name
+  Organization {
+    ...OrganizationFields
+  }
+}
+\`;
+
+const query1 = gql\`
+\${deviceFragment}
+query getDevice($deviceId: Int!) {
+  Device(id: $deviceId) {
+    ...DeviceFields
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetDeviceQueryData = { Device: ?DeviceFieldsData };
+
+// @graphql-to-flow auto-generated
+type GetDeviceQueryVariables = { deviceId: number };
+
+// @graphql-to-flow auto-generated
+type DeviceFieldsData = {
+  id: number,
+  name: string,
+  Organization: OrganizationFieldsData,
+};
+
+/* eslint-enable no-unused-vars */
+const query2 = gql\`
+\${orgFragment}
+query getOrg($organizationId: Int!) {
+  Organization(id: $organizationId) {
+    ...OrganizationFields
+  }
+}
+\`;
+
+// @graphql-to-flow auto-generated
+/* eslint-disable no-unused-vars */
+type GetOrgQueryData = { Organization: ?OrganizationFieldsData };
+
+// @graphql-to-flow auto-generated
+type GetOrgQueryVariables = { organizationId: number };
+
+// @graphql-to-flow auto-generated
+type OrganizationFieldsData = {
+  id: number,
+  name: string,
+  AllDevicesGroup: DeviceGroupData,
+};`)
+  })
 })
