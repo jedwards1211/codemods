@@ -1,6 +1,6 @@
 const FAIL = require('./FAIL')
 
-function precomputeIdentifier(path) {
+function resolveIdentifier(path) {
   if (path === FAIL || !path.node || path.node.type !== 'Identifier') {
     return FAIL
   }
@@ -17,4 +17,4 @@ function precomputeIdentifier(path) {
   return binding.parent.get('init')
 }
 
-module.exports = precomputeIdentifier
+module.exports = resolveIdentifier
