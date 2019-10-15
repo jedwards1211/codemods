@@ -201,6 +201,14 @@ module.exports = async function addGraphQLFlowTypes(options) {
 
   const generatedTypesForQuery = new Map()
 
+  /**
+   * Given a gql`...` TaggedTemplateExpression, traverses all the other
+   * expressions it interpolates with ${...} and gets the flow types created for
+   * any interpolated fragments.  Yields the externals as [key, value] pairs
+   * so you can do `new Map(collectExternals(path))`
+   * @param {NodePath} path - the path of the gql`...` TaggedTemplateExpression
+   * to collect externals for
+   */
   function* collectExternals(path) {
     const { expressions } = path.node.quasi
 
@@ -255,7 +263,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
       },
     })
     const extractTypes = new Map()
-    const external = new Map([...collectExternals(path)])
+    const external = new Map(collectExternals(path))
     for (const pragma of getPragmas(path)) {
       regex(pragma, /extract(-types)?:\s*(.*)/m, m =>
         m[2]
