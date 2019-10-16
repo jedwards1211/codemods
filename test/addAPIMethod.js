@@ -21,8 +21,7 @@ import { reify } from "flow-runtime";
     })
     expect(root.toSource()).to.equal(`// @flow
 // @flow-runtime enable
-import { reify } from "flow-runtime";
-import type { Type } from "flow-runtime";
+import { reify, type Type } from "flow-runtime";
 import { assert } from "../src/server/api/APIError";
 import APIContext from "../src/server/api/APIContext";
 export type CreateUserOptions = {

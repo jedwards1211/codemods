@@ -602,7 +602,7 @@ const View = () => {
   return <div />
 };`)
   })
-  it.skip(`adds types to useMutation hooks`, async function() {
+  it(`adds types to useMutation hooks`, async function() {
     const code = `// @flow
 import {useMutation} from 'react-apollo'
 import gql from 'graphql-tag'
@@ -659,7 +659,7 @@ type CreateUserMutationVariables = { values: {
 const View = () => {
   const [createUser]: [CreateUserMutationFunction] = useMutation(mutation)
   return <div />
-};`)
+}`)
   })
   it(`adds types to useSubscription hooks`, async function() {
     const code = `// @flow
