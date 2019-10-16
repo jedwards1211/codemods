@@ -148,7 +148,6 @@ query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChann
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = {
   roles: Object,
   item: ?{
@@ -223,17 +222,15 @@ type ChannelFieldsData = {
   offset: ?number,
 };
 
-/* eslint-enable no-unused-vars */
 const mutation = gql\`
 mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
   device: createDevice(organizationId: $organizationId, value: $values) {
     id
   }
 }
-\`;
+\`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type CreateDeviceMutationFunction = MutationFunction<CreateDeviceMutationData, CreateDeviceMutationVariables>;
 
 // @graphql-to-flow auto-generated
@@ -248,7 +245,6 @@ type CreateDeviceMutationVariables = {
   },
 };
 
-/* eslint-enable no-unused-vars */
 const ViewContainer = () => (
   <Mutation mutation={mutation}>
     {(createDevice: CreateDeviceMutationFunction) => (
@@ -262,7 +258,233 @@ const ViewContainer = () => (
       </Query>
     )}
   </Mutation>
-);`)
+)`)
+  })
+  it(`supports ignoring specific output types`, async function(): Promise<void> {
+    const code = `
+import {Query, Mutation} from 'react-apollo'
+import gql from 'graphql-tag'
+
+// @graphql-to-flow ignore
+const ignoredQuery = gql\`
+query {
+  currentUser
+}
+\`
+
+// @graphql-to-flow extract-types: MQTTDeviceChannel = MQTTDeviceChannelData, DeviceDirection
+// @graphql-to-flow scalar: JSON = Object
+// @graphql-to-flow ignore: GetStuffQueryVariables
+const query = gql\`
+fragment channelFields on MQTTDeviceChannel {
+  mqttTag
+  multiplier
+  offset
+}
+query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChannel!) {
+  roles: userGroupRolesInDeviceGroup(userGroupId: $userGroupId, deviceGroupId: $id)
+  item: UserGroup(id: $userGroupId) {
+    id
+    name
+    __typename
+  }
+  MQTTDeviceChannelGroup(id: $channelGroupId) {
+    id
+    direction
+    Channels {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        node {
+          id
+          ...channelFields
+        }
+      }
+    }
+    TagPrefixes {
+      id
+      deviceTagPrefix
+    }
+  }
+  MQTTDeviceChannel(id: 5) {
+    id
+    mqttTag
+  }
+}
+\`
+
+const mutation = gql\`
+mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
+  device: createDevice(organizationId: $organizationId, value: $values) {
+    id
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+type GetStuffVariables = {}
+
+// @graphql-to-flow auto-generated
+type ObsoleteType = {}
+
+const ViewContainer = () => (
+  <Mutation mutation={mutation}>
+    {(createDevice) => (
+      <Query
+        query={query}
+        variables={{baz: 'qux'}}
+      >
+        {(data) => (
+          <div />
+        )}
+      </Query>
+    )}
+  </Mutation>
+)
+`
+
+    const root = await addGraphQLFlowTypes({
+      code,
+      schemaFile: require.resolve('./schema.graphql'),
+      forbidEval: true,
+    })
+
+    expect(root.toSource().trim()).to
+      .equal(`import { Query, Mutation, type QueryRenderProps, type MutationFunction } from 'react-apollo';
+import gql from 'graphql-tag'
+
+// @graphql-to-flow ignore
+const ignoredQuery = gql\`
+query {
+  currentUser
+}
+\`
+
+// @graphql-to-flow extract-types: MQTTDeviceChannel = MQTTDeviceChannelData, DeviceDirection
+// @graphql-to-flow scalar: JSON = Object
+// @graphql-to-flow ignore: GetStuffQueryVariables
+const query = gql\`
+fragment channelFields on MQTTDeviceChannel {
+  mqttTag
+  multiplier
+  offset
+}
+query getStuff($userGroupId: Int!, $id: Int!, $newChannel: CreateMQTTDeviceChannel!) {
+  roles: userGroupRolesInDeviceGroup(userGroupId: $userGroupId, deviceGroupId: $id)
+  item: UserGroup(id: $userGroupId) {
+    id
+    name
+    __typename
+  }
+  MQTTDeviceChannelGroup(id: $channelGroupId) {
+    id
+    direction
+    Channels {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        node {
+          id
+          ...channelFields
+        }
+      }
+    }
+    TagPrefixes {
+      id
+      deviceTagPrefix
+    }
+  }
+  MQTTDeviceChannel(id: 5) {
+    id
+    mqttTag
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+type GetStuffQueryData = {
+  roles: Object,
+  item: ?{
+    id: number,
+    name: string,
+    __typename: string,
+  },
+  MQTTDeviceChannelGroup: ?{
+    id: number,
+    direction: DeviceDirection1,
+    Channels: {
+      pageInfo: { hasNextPage: boolean },
+      edges: ?Array<?{ node: MQTTDeviceChannelData }>,
+    },
+    TagPrefixes: {
+      id: number,
+      deviceTagPrefix: string,
+    },
+  },
+  MQTTDeviceChannel: ?MQTTDeviceChannelData1,
+};
+
+// @graphql-to-flow auto-generated
+type MQTTDeviceChannelData1 = {
+  id: number,
+  mqttTag: string,
+};
+
+// @graphql-to-flow auto-generated
+type MQTTDeviceChannelData = { id: number } & ChannelFieldsData;
+
+// @graphql-to-flow auto-generated
+type DeviceDirection1 = "FROM_DEVICE" | "TO_DEVICE";
+
+// @graphql-to-flow auto-generated
+type DeviceDirection = "FROM_DEVICE" | "TO_DEVICE";
+
+// @graphql-to-flow auto-generated
+type ChannelFieldsData = {
+  mqttTag: string,
+  multiplier: ?number,
+  offset: ?number,
+};
+
+const mutation = gql\`
+mutation createDevice($organizationId: Int!, $values: CreateDevice!) {
+  device: createDevice(organizationId: $organizationId, value: $values) {
+    id
+  }
+}
+\`
+
+// @graphql-to-flow auto-generated
+type CreateDeviceMutationFunction = MutationFunction<CreateDeviceMutationData, CreateDeviceMutationVariables>;
+
+// @graphql-to-flow auto-generated
+type CreateDeviceMutationData = { device: { id: number } };
+
+// @graphql-to-flow auto-generated
+type CreateDeviceMutationVariables = {
+  organizationId: number,
+  values: {
+    name: string,
+    type?: ?("MQTT"),
+  },
+};
+
+const ViewContainer = () => (
+  <Mutation mutation={mutation}>
+    {(createDevice: CreateDeviceMutationFunction) => (
+      <Query
+        query={query}
+        variables={({baz: 'qux'}: GetStuffQueryVariables)}
+      >
+        {(data: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables>) => (
+          <div />
+        )}
+      </Query>
+    )}
+  </Mutation>
+)`)
   })
   it(`adds types to useQuery hooks`, async function() {
     const code = `// @flow
@@ -304,13 +526,11 @@ query getStuff($userId: Int!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?{ name: ?string } };
 
 // @graphql-to-flow auto-generated
 type GetStuffQueryVariables = { userId: number };
 
-/* eslint-enable no-unused-vars */
 const View = () => {
   const {
     data
@@ -318,7 +538,7 @@ const View = () => {
     variables: ({userId: 1}: GetStuffQueryVariables)
   })
   return <div />
-};`)
+}`)
   })
   it(`leaves everything generated for useQuery hooks intact`, async function() {
     const code = `// @flow
@@ -334,13 +554,11 @@ query getStuff($userId: Int!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?{ name: ?string } };
 
 // @graphql-to-flow auto-generated
 type GetStuffQueryVariables = { userId: number };
 
-/* eslint-enable no-unused-vars */
 const View = () => {
   const {
     data
@@ -370,13 +588,11 @@ query getStuff($userId: Int!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?{ name: ?string } };
 
 // @graphql-to-flow auto-generated
 type GetStuffQueryVariables = { userId: number };
 
-/* eslint-enable no-unused-vars */
 const View = () => {
   const {
     data
@@ -426,7 +642,6 @@ mutation createUser($values: CreateUser!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type CreateUserMutationFunction = MutationFunction<CreateUserMutationData, CreateUserMutationVariables>;
 
 // @graphql-to-flow auto-generated
@@ -441,7 +656,6 @@ type CreateUserMutationVariables = { values: {
   username: string,
 } };
 
-/* eslint-enable no-unused-vars */
 const View = () => {
   const [createUser]: [CreateUserMutationFunction] = useMutation(mutation)
   return <div />
@@ -489,7 +703,6 @@ subscription tagState($tag: String!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type TagStateSubscriptionData = { TagState: ?{
   tag: string,
   v: ?mixed,
@@ -498,7 +711,6 @@ type TagStateSubscriptionData = { TagState: ?{
 // @graphql-to-flow auto-generated
 type TagStateSubscriptionVariables = { tag: string };
 
-/* eslint-enable no-unused-vars */
 const View = () => {
   const {
     loading,
@@ -507,7 +719,7 @@ const View = () => {
     variables: ({tag: 'foo'}: TagStateSubscriptionVariables)
   })
   return <div />
-};`)
+}`)
   })
   it(`interpolates basic templates without evaluation`, async function() {
     const code = `// @flow
@@ -550,7 +762,6 @@ query getStuff($userId: Int!) {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?{
   id: number,
   name: ?string,
@@ -598,13 +809,11 @@ fragment UserFields on User {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type UserFieldsData = {
   id: number,
   name: ?string,
 };
 
-/* eslint-enable no-unused-vars */
 const query = gql\`
 \${userFragment}
 query getStuff($userId: Int!) {
@@ -612,10 +821,9 @@ query getStuff($userId: Int!) {
     ...UserFields
   }
 }
-\`;
+\`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetStuffQueryData = { User: ?UserFieldsData };
 
 // @graphql-to-flow auto-generated
@@ -674,8 +882,6 @@ query getOrg($organizationId: Int!) {
       forbidEval: true,
     })
 
-    console.log(root.toSource())
-
     expect(root.toSource().trim()).to.equal(`// @flow
 import gql from 'graphql-tag'
 
@@ -693,7 +899,6 @@ fragment OrganizationFields on Organization {
 \`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type OrgFields = {
   id: number,
   name: string,
@@ -706,7 +911,6 @@ type DeviceGroupData = {
   name: string,
 };
 
-/* eslint-enable no-unused-vars */
 const deviceFragment = gql\`
 \${orgFragment}
 fragment DeviceFields on Device {
@@ -716,17 +920,15 @@ fragment DeviceFields on Device {
     ...OrganizationFields
   }
 }
-\`;
+\`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type DeviceFieldsData = {
   id: number,
   name: string,
   Organization: OrgFields,
 };
 
-/* eslint-enable no-unused-vars */
 const query1 = gql\`
 \${deviceFragment}
 query getDevice($deviceId: Int!) {
@@ -734,16 +936,14 @@ query getDevice($deviceId: Int!) {
     ...DeviceFields
   }
 }
-\`;
+\`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetDeviceQueryData = { Device: ?DeviceFieldsData };
 
 // @graphql-to-flow auto-generated
 type GetDeviceQueryVariables = { deviceId: number };
 
-/* eslint-enable no-unused-vars */
 const query2 = gql\`
 \${orgFragment}
 query getOrg($organizationId: Int!) {
@@ -751,10 +951,9 @@ query getOrg($organizationId: Int!) {
     ...OrganizationFields
   }
 }
-\`;
+\`
 
 // @graphql-to-flow auto-generated
-/* eslint-disable no-unused-vars */
 type GetOrgQueryData = { Organization: ?OrgFields };
 
 // @graphql-to-flow auto-generated

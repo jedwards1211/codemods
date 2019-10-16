@@ -264,6 +264,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
     })
     const extractTypes = new Map()
     const external = new Map(collectExternals(path))
+    const ignore = new Set()
     for (const pragma of getPragmas(path)) {
       regex(pragma, /extract(-types)?:\s*(.*)/m, m =>
         m[2]
@@ -279,6 +280,9 @@ module.exports = async function addGraphQLFlowTypes(options) {
             regex(t, /(\w+)(\s*=\s*(\w+))?/, m => external.set(m[1], m[3]))
           )
       )
+      regex(pragma, /ignore:\s*(.*)/m, m =>
+        m[1].split(/\s*,\s*/g).forEach(t => ignore.add(t))
+      )
     }
     const { statements: types, generatedTypes } = await graphqlToFlow({
       file,
@@ -293,6 +297,7 @@ module.exports = async function addGraphQLFlowTypes(options) {
     generatedTypesForQuery.set(declarator.id.name, generatedTypes)
 
     for (let type of types) {
+      if (ignore.has(type.id.name)) continue
       if (!type.comments) type.comments = []
       type.comments.push(j.commentLine(AUTO_GENERATED_COMMENT))
       const {
@@ -607,25 +612,6 @@ module.exports = async function addGraphQLFlowTypes(options) {
     .find(j.ExportNamedDeclaration)
     .filter(isStale)
     .remove()
-
-  const { body } = root.find(j.Program).paths()[0].node
-  let prev
-  for (const next of body) {
-    if (!addedStatements.has(prev) && addedStatements.has(next)) {
-      if (!next.comments) next.comments = []
-      next.comments.push(j.commentBlock(' eslint-disable no-unused-vars '))
-    } else if (addedStatements.has(prev) && !addedStatements.has(next)) {
-      if (!next.comments) next.comments = []
-      if (
-        !next.comments.find(
-          comment => comment.value.trim() === 'eslint-enable no-unused-vars'
-        )
-      ) {
-        next.comments.push(j.commentBlock(' eslint-enable no-unused-vars '))
-      }
-    }
-    prev = next
-  }
 
   return root
 }
