@@ -441,24 +441,15 @@ module.exports = async function addGraphQLFlowTypes(options) {
         .forEach(path => {
           const { data, variables } = onlyValue(generatedTypes.query) || {}
           if (!data) return
-          path.node.id.typeAnnotation = queryRenderPropsAnnotation(
-            data,
-            variables
+
+          path.node.init.typeArguments = j.typeParameterInstantiation(
+            [
+              j.genericTypeAnnotation(j.identifier(data.id.name), null),
+              variables
+                ? j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+                : null,
+            ].filter(Boolean)
           )
-          const options = path.node.init.arguments[1]
-          if (variables && options && options.type === 'ObjectExpression') {
-            const variablesProp = options.properties.find(
-              p => p.key.type === 'Identifier' && p.key.name === 'variables'
-            )
-            if (variablesProp) {
-              variablesProp.value = typeCast(
-                variablesProp.value,
-                j.typeAnnotation(
-                  j.genericTypeAnnotation(j.identifier(variables.id.name), null)
-                )
-              )
-            }
-          }
         })
     }
 
@@ -478,24 +469,15 @@ module.exports = async function addGraphQLFlowTypes(options) {
           },
         })
         .forEach(path => {
-          const { data, mutationFunction } =
-            onlyValue(generatedTypes.mutation) || {}
-          if (!mutationFunction) return
-          const {
-            node: { id },
-          } = path
-          id.typeAnnotation = j.typeAnnotation(
-            j.tupleTypeAnnotation(
-              [
-                j.genericTypeAnnotation(
-                  j.identifier(mutationFunction.id.name),
-                  null
-                ),
-                data && id.type === 'ArrayPattern' && id.length > 1
-                  ? mutationResultAnnotation(data)
-                  : null,
-              ].filter(Boolean)
-            )
+          const { data, variables } = onlyValue(generatedTypes.mutation) || {}
+          if (!data) return
+          path.node.init.typeArguments = j.typeParameterInstantiation(
+            [
+              j.genericTypeAnnotation(j.identifier(data.id.name), null),
+              variables
+                ? j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+                : null,
+            ].filter(Boolean)
           )
         })
     }
@@ -519,24 +501,14 @@ module.exports = async function addGraphQLFlowTypes(options) {
           const { data, variables } =
             onlyValue(generatedTypes.subscription) || {}
           if (!data) return
-          path.node.id.typeAnnotation = subscriptionResultAnnotation(
-            data,
-            variables
+          path.node.init.typeArguments = j.typeParameterInstantiation(
+            [
+              j.genericTypeAnnotation(j.identifier(data.id.name), null),
+              variables
+                ? j.genericTypeAnnotation(j.identifier(variables.id.name), null)
+                : null,
+            ].filter(Boolean)
           )
-          const options = path.node.init.arguments[1]
-          if (variables && options && options.type === 'ObjectExpression') {
-            const variablesProp = options.properties.find(
-              p => p.key.type === 'Identifier' && p.key.name === 'variables'
-            )
-            if (variablesProp) {
-              variablesProp.value = typeCast(
-                variablesProp.value,
-                j.typeAnnotation(
-                  j.genericTypeAnnotation(j.identifier(variables.id.name), null)
-                )
-              )
-            }
-          }
         })
     }
   }

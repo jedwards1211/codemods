@@ -514,7 +514,7 @@ const View = () => {
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
-import { useQuery, type QueryRenderProps } from 'react-apollo';
+import {useQuery} from 'react-apollo'
 import gql from 'graphql-tag'
 
 const query = gql\`
@@ -532,10 +532,8 @@ type GetStuffQueryData = { User: ?{ name: ?string } };
 type GetStuffQueryVariables = { userId: number };
 
 const View = () => {
-  const {
-    data
-  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query, {
-    variables: ({userId: 1}: GetStuffQueryVariables)
+  const {data} = useQuery<GetStuffQueryData, GetStuffQueryVariables>(query, {
+    variables: {userId: 1}
   })
   return <div />
 }`)
@@ -596,7 +594,7 @@ type GetStuffQueryVariables = { userId: number };
 const View = () => {
   const {
     data
-  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery(query, {
+  }: QueryRenderProps<GetStuffQueryData, GetStuffQueryVariables> = useQuery<GetStuffQueryData, GetStuffQueryVariables>(query, {
     variables: ({userId: 1}: GetStuffQueryVariables)
   })
   return <div />
@@ -657,7 +655,7 @@ type CreateUserMutationVariables = { values: {
 } };
 
 const View = () => {
-  const [createUser]: [CreateUserMutationFunction] = useMutation(mutation)
+  const [createUser] = useMutation<CreateUserMutationData, CreateUserMutationVariables>(mutation)
   return <div />
 }`)
   })
@@ -690,7 +688,7 @@ const View = () => {
     })
 
     expect(root.toSource().trim()).to.equal(`// @flow
-import { useSubscription, type SubscriptionResult } from 'react-apollo';
+import {useSubscription} from 'react-apollo'
 import gql from 'graphql-tag'
 
 const subscription = gql\`
@@ -712,11 +710,8 @@ type TagStateSubscriptionData = { TagState: ?{
 type TagStateSubscriptionVariables = { tag: string };
 
 const View = () => {
-  const {
-    loading,
-    data
-  }: SubscriptionResult<TagStateSubscriptionData, TagStateSubscriptionVariables> = useSubscription(subscription, {
-    variables: ({tag: 'foo'}: TagStateSubscriptionVariables)
+  const {loading, data} = useSubscription<TagStateSubscriptionData, TagStateSubscriptionVariables>(subscription, {
+    variables: {tag: 'foo'}
   })
   return <div />
 }`)
