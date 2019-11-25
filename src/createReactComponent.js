@@ -2,7 +2,8 @@ const identifierFromFile = require('./identifierFromFile')
 
 function createReactComponent(file) {
   const name = identifierFromFile(file)
-  return `/**
+  const isTypeScript = /\.tsx?$/.test(file)
+  return `/**${isTypeScript ? '' : ' * @flow'}
  * @flow
  * @prettier
  */
@@ -13,7 +14,7 @@ export type Props = {
 }
 
 export default class ${name} extends React.Component<Props> {
-  render(): React.Node {
+  render(): React.${isTypeScript ? 'ReactNode' : 'Node'} {
   }
 }
 `
