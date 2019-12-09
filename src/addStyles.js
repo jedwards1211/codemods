@@ -23,6 +23,7 @@ function addPropertyBeforeRestElement(pattern, property) {
 }
 
 module.exports = function addStyles(root, filter = () => true, { file }) {
+  const isTypeScript = /\.tsx?$/.test(file)
   const flow = hasFlowAnnotation(root)
 
   const { withStyles } = addImports(
@@ -39,6 +40,19 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
           './src/universal/theme'
         )}'`,
       ])
+    ))
+  }
+  let WithStyles
+  if (isTypeScript) {
+    ;({ Theme } = addImports(
+      root,
+      statement([
+        `import { Theme } from '@material-ui/core/styles/createMuiTheme'`,
+      ])
+    ))
+    ;({ WithStyles } = addImports(
+      root,
+      statement([`import { WithStyles } from '@material-ui/core'`])
     ))
   }
 
@@ -159,6 +173,34 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
     }
   }
 
+  if (isTypeScript) {
+    if (propsParam && propsParam.typeAnnotation) {
+      const { typeAnnotation } = propsParam.typeAnnotation
+      if (typeAnnotation && typeAnnotation.type === 'TSTypeReference') {
+        const propsTypeName = typeAnnotation.typeName.name
+        const typeScope = componentScope.lookupType(propsTypeName)
+        const propsInterface = root
+          .find(j.TSInterfaceDeclaration, {
+            id: { name: propsTypeName },
+          })
+          .filter(path => path.scope === typeScope)
+          .at(0)
+        if (propsInterface.size()) {
+          const node = propsInterface.nodes()[0]
+          if (!node.extends) node.extends = []
+          node.extends.push(
+            j.tsExpressionWithTypeArguments(
+              j.identifier(WithStyles),
+              j.tsTypeParameterInstantiation([
+                j.tsTypeQuery(j.identifier(styles)),
+              ])
+            )
+          )
+        }
+      }
+    }
+  }
+
   if (flow && !root.find(j.TypeAlias, { id: { name: 'Classes' } }).size()) {
     afterStyles.insertBefore(
       statement([
@@ -169,7 +211,7 @@ module.exports = function addStyles(root, filter = () => true, { file }) {
 
   afterStyles.insertBefore(
     statement([
-      `\n\nconst ${styles} = ${flow ? `(theme: ${Theme})` : 'theme'} => ({
+      `\n\nconst ${styles} = ${Theme ? `(theme: ${Theme})` : 'theme'} => ({
 
 })\n\n`,
     ])
