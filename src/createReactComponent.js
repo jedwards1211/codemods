@@ -3,7 +3,7 @@ const identifierFromFile = require('./identifierFromFile')
 function createReactComponent(file) {
   const name = identifierFromFile(file)
   const isTypeScript = /\.tsx?$/.test(file)
-  return `/**${isTypeScript ? '' : ' * @flow'}
+  return `/**${isTypeScript ? '' : '\n * @flow'}
  * @flow
  * @prettier
  */

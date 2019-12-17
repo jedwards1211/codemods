@@ -2,7 +2,7 @@ const identifierFromFile = require('./identifierFromFile')
 
 function createExportDefaultFunction(file) {
   const isTypeScript = /\.tsx?$/.test(file)
-  return `/**${isTypeScript ? '' : ' * @flow'}
+  return `/**${isTypeScript ? '' : '\n * @flow'}
  * @prettier
  */
 
