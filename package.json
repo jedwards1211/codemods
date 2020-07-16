@@ -141,7 +141,7 @@
     "jscodeshift-add-imports": "^1.0.0",
     "jscodeshift-find-imports": "^1.0.1",
     "json5": "^1.0.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "lodash-es": "^4.17.10",
     "lodash.map": "^4.6.0",
     "lodash.upperfirst": "^4.3.1",
